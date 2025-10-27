@@ -1,5 +1,5 @@
 ---
-name: 알통
+name: 알통 백엔드
 about: 알통 백엔드 이슈 템플릿
 title: "[ALTONG-BE]"
 labels: ''
