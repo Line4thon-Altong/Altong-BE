@@ -10,7 +10,7 @@ description = '2025 4호선톤 알통 '
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(21)
+		languageVersion = JavaLanguageVersion.of(17)
 	}
 }
 
