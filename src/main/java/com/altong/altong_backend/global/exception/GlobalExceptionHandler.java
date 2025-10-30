@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
+    // 비즈니스 예외 처리
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiResponse<Void>> handleBusinessException(BusinessException e) {
         ErrorCode errorCode=e.getErrorCode();
@@ -17,11 +17,11 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.fail(errorCode.getCode(),errorCode.getMessage()));
     }
 
+    // 예상치 못한 예외 처리
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.fail("INTERNAL_SERVER_ERROR","서버 내부 오류입니다."));
-
+                .body(ApiResponse.fail("G002", "서버 내부 오류입니다."));
     }
 }
