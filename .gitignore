@@ -38,8 +38,7 @@ out/
 
 
 ### Custom ###
-# 환경설정 파일
-src/main/resources/application.yml
+.env
 
 # 로그, 임시파일
 *.log

@@ -13,7 +13,7 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Altong API")
-                        .description("알통 통합 로그인/회원가입 API 명세")
+                        .description("알통 통합 로그인/회원가입 API 명세서")
                         .version("v1.0.0"));
     }
 }
