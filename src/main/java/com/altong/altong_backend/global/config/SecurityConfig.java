@@ -48,7 +48,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/owners/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/employees/login").permitAll()
 
-                        // 그 외는 인증 필요
+                        // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
                 );
 
