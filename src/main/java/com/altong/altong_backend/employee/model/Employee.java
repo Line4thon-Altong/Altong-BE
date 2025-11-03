@@ -47,4 +47,8 @@ public class Employee {
                 .addedAt(LocalDateTime.now())
                 .build();
     }
+
+    public void updateStore(Store store) {
+        this.store = store;
+    }
 }

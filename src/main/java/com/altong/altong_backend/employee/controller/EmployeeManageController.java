@@ -2,6 +2,7 @@ package com.altong.altong_backend.employee.controller;
 
 import com.altong.altong_backend.employee.dto.request.EmployeeAddRequest;
 import com.altong.altong_backend.employee.dto.response.EmployeeAddResponse;
+import com.altong.altong_backend.employee.dto.response.EmployeeDeleteResponse;
 import com.altong.altong_backend.employee.dto.response.EmployeeListResponse;
 import com.altong.altong_backend.employee.service.EmployeeManageService;
 import com.altong.altong_backend.global.response.ApiResponse;
@@ -36,4 +37,14 @@ public class EmployeeManageController {
     ) {
         List<EmployeeListResponse> employees = employeeManageService.getEmployees(token);
         return ResponseEntity.ok(ApiResponse.success(employees));    }
+
+    // 알바생 삭제
+    @DeleteMapping("/{employeeId}")
+    public ResponseEntity<ApiResponse<EmployeeDeleteResponse>> deleteEmployee(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long employeeId
+    ) {
+        EmployeeDeleteResponse response = employeeManageService.deleteEmployee(token, employeeId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
 }

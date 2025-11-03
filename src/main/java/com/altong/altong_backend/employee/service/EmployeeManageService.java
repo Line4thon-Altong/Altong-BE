@@ -2,6 +2,7 @@ package com.altong.altong_backend.employee.service;
 
 import com.altong.altong_backend.employee.dto.request.EmployeeAddRequest;
 import com.altong.altong_backend.employee.dto.response.EmployeeAddResponse;
+import com.altong.altong_backend.employee.dto.response.EmployeeDeleteResponse;
 import com.altong.altong_backend.employee.dto.response.EmployeeListResponse;
 import com.altong.altong_backend.employee.model.Employee;
 import com.altong.altong_backend.employee.repository.EmployeeRepository;
@@ -97,5 +98,43 @@ public class EmployeeManageService {
                         .addedAt(emp.getAddedAt())
                         .build())
                 .toList();
+    }
+
+    // 알바생 삭제
+    @Transactional
+    public EmployeeDeleteResponse deleteEmployee(String token, Long employeeId) {
+        String accessToken = token.replace("Bearer ", "");
+        Claims claims;
+        try {
+            claims = jwt.parse(accessToken).getBody();
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        String subject = claims.getSubject();
+        if (!subject.startsWith("OWNER:")) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ROLE);
+        }
+        Long ownerId = Long.parseLong(subject.substring(6));
+
+        Owner owner = ownerRepo.findById(ownerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
+
+        Store store = storeRepo.findByOwner(owner)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+
+        Employee employee = employeeRepo.findById(employeeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
+
+        // 해당 가게의 알바생인지 검증
+        if (employee.getStore() == null || !employee.getStore().getId().equals(store.getId())) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACTION);
+        }
+
+        // 가게 연결 해제
+        employee.updateStore(null);
+        employeeRepo.save(employee);
+
+        return new EmployeeDeleteResponse("알바생을 삭제했습니다.");
     }
 }
