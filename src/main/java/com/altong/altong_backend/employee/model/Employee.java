@@ -33,6 +33,9 @@ public class Employee {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy="employee",cascade=CascadeType.ALL)
+    private List<Schedule> schedules;
+
     @Column
     private LocalDateTime addedAt;
 
