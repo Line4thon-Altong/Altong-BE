@@ -1,5 +1,6 @@
 package com.altong.altong_backend.employee.model;
 
+import com.altong.altong_backend.training.model.Training;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,11 +15,11 @@ public class EmployeeTraining {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "employee_id", nullable = false)
-//    private Employee employee;
-//
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "training_id", nullable = false)
-//    private Training training;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "employee_id", nullable = false)
+    private Employee employee;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "training_id", nullable = false)
+    private Training training;
 }
