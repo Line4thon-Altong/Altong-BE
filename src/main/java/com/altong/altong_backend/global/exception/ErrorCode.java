@@ -16,7 +16,8 @@ public enum ErrorCode {
     DUPLICATE_USERNAME(HttpStatus.CONFLICT, "A002", "이미 존재하는 사용자 이름입니다."),
     NOT_FOUND_USER(HttpStatus.NOT_FOUND, "A003", "사용자를 찾을 수 없습니다."),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "A004", "토큰이 유효하지 않습니다."),
-    UNAUTHORIZED_ROLE(HttpStatus.FORBIDDEN, "A005", "접근 권한이 없습니다."),
+    UNAUTHORIZED_ROLE(HttpStatus.FORBIDDEN, "A005", "현재 계정은 이 기능을 사용할 수 없습니다."),
+    UNAUTHORIZED_ACTION(HttpStatus.FORBIDDEN, "A006", "해당 리소스에 접근할 권한이 없습니다."),
 
     // 직원(Employee)
     EMPLOYEE_NOT_FOUND(HttpStatus.NOT_FOUND, "E001", "직원 정보를 찾을 수 없습니다."),
