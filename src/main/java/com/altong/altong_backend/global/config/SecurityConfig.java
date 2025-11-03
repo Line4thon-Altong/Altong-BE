@@ -50,9 +50,8 @@ public class SecurityConfig {
 
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
-                );
-
-        http.addFilterBefore(new JwtAuthFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                )
+                .addFilterBefore(new JwtAuthFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
