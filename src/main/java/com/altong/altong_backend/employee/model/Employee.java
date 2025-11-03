@@ -32,4 +32,19 @@ public class Employee {
 
     @Column(nullable = false)
     private LocalDateTime createdAt;
+
+    @Column
+    private LocalDateTime addedAt;
+
+    public Employee assignToStore(Store store) {
+        return Employee.builder()
+                .id(this.id)
+                .name(this.name)
+                .username(this.username)
+                .password(this.password)
+                .store(store)
+                .createdAt(this.createdAt)
+                .addedAt(LocalDateTime.now())
+                .build();
+    }
 }
