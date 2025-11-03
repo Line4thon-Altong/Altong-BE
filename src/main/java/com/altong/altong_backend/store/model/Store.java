@@ -1,8 +1,11 @@
 package com.altong.altong_backend.store.model;
 
 import com.altong.altong_backend.owner.model.Owner;
+import com.altong.altong_backend.schedule.domain.Schedule;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Entity
 @Getter
@@ -25,4 +28,7 @@ public class Store {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id")
     private Owner owner;
+
+    @OneToMany(mappedBy="store",cascade=CascadeType.ALL)
+    private List<Schedule> schedules;
 }
