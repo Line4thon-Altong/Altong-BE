@@ -2,15 +2,13 @@ package com.altong.altong_backend.schedule.domain;
 
 import com.altong.altong_backend.employee.model.Employee;
 import com.altong.altong_backend.store.model.Store;
-import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-import static jakarta.persistence.FetchType.*;
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Getter
@@ -38,5 +36,6 @@ public class Schedule {
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name="store_id",nullable=false)
     private Store store;
+
 
 }
