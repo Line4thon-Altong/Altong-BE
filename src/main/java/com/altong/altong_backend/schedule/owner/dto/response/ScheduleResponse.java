@@ -1,4 +1,4 @@
-package com.altong.altong_backend.schedule.employee.dto.response;
+package com.altong.altong_backend.schedule.owner.dto.response;
 
 import com.altong.altong_backend.schedule.entity.Schedule;
 import io.swagger.v3.oas.annotations.media.Schema;

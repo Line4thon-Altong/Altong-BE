@@ -1,9 +1,9 @@
-package com.altong.altong_backend.schedule.employee.controller;
+package com.altong.altong_backend.schedule.owner.controller;
 
 import com.altong.altong_backend.global.response.ApiResponse;
-import com.altong.altong_backend.schedule.employee.dto.request.ScheduleCreateRequest;
-import com.altong.altong_backend.schedule.employee.dto.response.ScheduleResponse;
-import com.altong.altong_backend.schedule.employee.service.ScheduleService;
+import com.altong.altong_backend.schedule.owner.dto.request.ScheduleCreateRequest;
+import com.altong.altong_backend.schedule.owner.dto.response.ScheduleResponse;
+import com.altong.altong_backend.schedule.owner.service.ScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

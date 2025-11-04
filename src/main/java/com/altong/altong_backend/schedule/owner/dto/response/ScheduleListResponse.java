@@ -1,4 +1,4 @@
-package com.altong.altong_backend.schedule.employee.dto.response;
+package com.altong.altong_backend.schedule.owner.dto.response;
 
 import java.util.List;
 

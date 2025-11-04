@@ -1,4 +1,4 @@
-package com.altong.altong_backend.schedule.employee.dto.request;
+package com.altong.altong_backend.schedule.owner.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import io.swagger.v3.oas.annotations.media.Schema;

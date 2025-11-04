@@ -1,4 +1,4 @@
-package com.altong.altong_backend.schedule.owner.dto.request;
+package com.altong.altong_backend.schedule.employee.dto.request;
 
 public record CheckOutRequest(Long employeeId, Long scheduleId) {
 }

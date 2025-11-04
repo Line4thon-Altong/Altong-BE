@@ -1,12 +1,12 @@
-package com.altong.altong_backend.schedule.employee.service;
+package com.altong.altong_backend.schedule.owner.service;
 
 import com.altong.altong_backend.employee.model.Employee;
 import com.altong.altong_backend.employee.repository.EmployeeRepository;
 import com.altong.altong_backend.global.exception.BusinessException;
 import com.altong.altong_backend.global.exception.ErrorCode;
-import com.altong.altong_backend.schedule.employee.dto.request.ScheduleCreateRequest;
-import com.altong.altong_backend.schedule.employee.dto.response.ScheduleResponse;
-import com.altong.altong_backend.schedule.employee.repository.ScheduleRepository;
+import com.altong.altong_backend.schedule.owner.dto.request.ScheduleCreateRequest;
+import com.altong.altong_backend.schedule.owner.dto.response.ScheduleResponse;
+import com.altong.altong_backend.schedule.owner.repository.ScheduleRepository;
 import com.altong.altong_backend.schedule.entity.Schedule;
 import com.altong.altong_backend.schedule.entity.WorkStatus;
 import com.altong.altong_backend.store.model.Store;
