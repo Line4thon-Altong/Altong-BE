@@ -1,9 +1,13 @@
 package com.altong.altong_backend.employee.model;
 
-import com.altong.altong_backend.schedule.domain.Schedule;
+import com.altong.altong_backend.schedule.entity.Schedule;
 import com.altong.altong_backend.store.model.Store;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -56,4 +60,6 @@ public class Employee {
     public void updateStore(Store store) {
         this.store = store;
     }
+
+    
 }

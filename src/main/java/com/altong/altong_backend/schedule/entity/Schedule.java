@@ -3,7 +3,7 @@ package com.altong.altong_backend.schedule.entity;
 import com.altong.altong_backend.employee.model.Employee;
 import com.altong.altong_backend.store.model.Store;
 import jakarta.persistence.*;
-import lombok.Getter;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -12,10 +12,14 @@ import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Getter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@Table(name = "schedule")
 public class Schedule {
 
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="schedule_id")
     private Long id;
 
