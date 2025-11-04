@@ -29,14 +29,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 // 토큰 검증 + 인증 객체 생성 + 시큐리티 컨텍스트 등록
                 Authentication authentication = provider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (ExpiredJwtException e) {
-                res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
             } catch (JwtException e) {
                 res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 return;
             } catch (Exception e) {
-                res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 return;
             }
         }
