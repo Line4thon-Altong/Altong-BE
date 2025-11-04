@@ -71,4 +71,19 @@ public class ScheduleController {
         ScheduleListResponse response = scheduleService.getStoreSchedules(storeId, workDate);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+
+    @DeleteMapping("/api/stores/{storeId}/schedules/{scheduleId}")
+    @Operation(
+            summary = "알바 스케줄 삭제",
+            description = "사장님이 특정 스케줄을 삭제",
+            security = { @SecurityRequirement(name = "bearerAuth") }
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "삭제 성공")
+    public ResponseEntity<ApiResponse<Void>> deleteSchedule(
+            @PathVariable Long storeId,
+            @PathVariable Long scheduleId) {
+        
+        scheduleService.deleteSchedule(storeId, scheduleId);
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
 }

@@ -99,4 +99,18 @@ public class ScheduleService {
 
         return new ScheduleListResponse(scheduleResponses);
     }
+
+    @Transactional
+    public void deleteSchedule(Long storeId, Long scheduleId) {
+        // 스케줄 존재 여부
+        Schedule schedule = scheduleRepository.findById(scheduleId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND));
+
+        // 해당 스케줄이 해당 매장의 스케줄인지 확인
+        if (schedule.getStore() == null || !schedule.getStore().getId().equals(storeId)) {
+            throw new BusinessException(ErrorCode.SCHEDULE_NOT_BELONG_TO_STORE);
+        }
+
+        scheduleRepository.delete(schedule);
+    }
 }
