@@ -35,8 +35,8 @@ public class ScheduleController {
             content = @Content(schema = @Schema(implementation = ScheduleResponse.class)))
     public ResponseEntity<ApiResponse<ScheduleResponse>> createSchedule(@PathVariable Long storeId,
                                                                         @PathVariable Long employeeId,
-                                                                        @RequestBody ScheduleCreateRequest scheduleCreateRequest) {
-        ScheduleResponse response = scheduleService.createSchedule(storeId,employeeId,scheduleCreateRequest);
+                                                                        @RequestBody ScheduleCreateRequest request) {
+        ScheduleResponse response = scheduleService.createSchedule(storeId,employeeId,request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 

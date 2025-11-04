@@ -29,7 +29,7 @@ public class ScheduleService {
     private final EmployeeRepository employeeRepository;
 
     @Transactional
-    public ScheduleResponse createSchedule(Long storeId,Long employeeId,ScheduleCreateRequest scheduleCreateRequest) {
+    public ScheduleResponse createSchedule(Long storeId,Long employeeId,ScheduleCreateRequest request) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
@@ -44,7 +44,7 @@ public class ScheduleService {
         Schedule schedule = Schedule.builder()
                 .store(store)
                 .employee(employee)
-                .workDate(scheduleCreateRequest.workDate())
+                .workDate(request.workDate())
                 .startTime(null) // 알바생 입력 필드
                 .endTime(null)   // 알바생 입력 필드
                 .workStatus(WorkStatus.SCHEDULED)
