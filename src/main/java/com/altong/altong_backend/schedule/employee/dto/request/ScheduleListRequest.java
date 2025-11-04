@@ -1,4 +1,4 @@
-package com.altong.altong_backend.schedule.dto.employee.request;
+package com.altong.altong_backend.schedule.employee.dto.request;
 
 import java.time.LocalDate;
 

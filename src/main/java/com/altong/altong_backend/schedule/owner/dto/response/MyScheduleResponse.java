@@ -1,6 +1,6 @@
-package com.altong.altong_backend.schedule.dto.owner.response;
+package com.altong.altong_backend.schedule.owner.dto.response;
 
-import com.altong.altong_backend.schedule.dto.employee.response.ScheduleResponse;
+import com.altong.altong_backend.schedule.employee.dto.response.ScheduleResponse;
 
 import java.util.List;
 
