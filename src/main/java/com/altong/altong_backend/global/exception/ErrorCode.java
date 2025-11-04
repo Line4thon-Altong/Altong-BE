@@ -21,12 +21,17 @@ public enum ErrorCode {
 
     // 직원(Employee)
     EMPLOYEE_NOT_FOUND(HttpStatus.NOT_FOUND, "E001", "직원 정보를 찾을 수 없습니다."),
+    EMPLOYEE_NOT_BELONG_TO_STORE(HttpStatus.FORBIDDEN, "E002", "해당 매장의 직원이 아닙니다."),
 
     // 사장(Owner)
     OWNER_NOT_FOUND(HttpStatus.NOT_FOUND, "O001", "사장 정보를 찾을 수 없습니다."),
 
     // 가게
-    STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "가게 정보를 찾을 수 없습니다.");
+    STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "S001", "가게 정보를 찾을 수 없습니다."),
+
+    // 스케줄
+    SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "SC001", "스케줄 정보를 찾을 수 없습니다."),
+    SCHEDULE_NOT_BELONG_TO_STORE(HttpStatus.FORBIDDEN, "SC002", "해당 매장의 스케줄이 아닙니다.");
 
     private final HttpStatus status;
     private final String code;

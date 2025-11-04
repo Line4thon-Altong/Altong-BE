@@ -1,9 +1,15 @@
 package com.altong.altong_backend.employee.model;
 
+import com.altong.altong_backend.schedule.entity.Schedule;
 import com.altong.altong_backend.store.model.Store;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
@@ -33,6 +39,9 @@ public class Employee {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @OneToMany(mappedBy="employee",cascade=CascadeType.ALL)
+    private List<Schedule> schedules;
+
     @Column
     private LocalDateTime addedAt;
 
@@ -51,4 +60,6 @@ public class Employee {
     public void updateStore(Store store) {
         this.store = store;
     }
+
+    
 }
