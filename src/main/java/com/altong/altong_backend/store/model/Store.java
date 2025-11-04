@@ -1,7 +1,7 @@
 package com.altong.altong_backend.store.model;
 
 import com.altong.altong_backend.owner.model.Owner;
-import com.altong.altong_backend.schedule.domain.Schedule;
+import com.altong.altong_backend.schedule.entity.Schedule;
 import jakarta.persistence.*;
 import lombok.*;
 

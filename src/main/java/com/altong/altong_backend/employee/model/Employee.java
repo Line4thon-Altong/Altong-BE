@@ -1,9 +1,11 @@
 package com.altong.altong_backend.employee.model;
 
+import com.altong.altong_backend.schedule.domain.Schedule;
 import com.altong.altong_backend.store.model.Store;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Getter
