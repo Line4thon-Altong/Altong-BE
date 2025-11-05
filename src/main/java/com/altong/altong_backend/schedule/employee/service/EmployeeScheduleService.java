@@ -3,6 +3,7 @@ package com.altong.altong_backend.schedule.employee.service;
 import com.altong.altong_backend.global.exception.BusinessException;
 import com.altong.altong_backend.global.exception.ErrorCode;
 import com.altong.altong_backend.schedule.employee.dto.response.CheckInResponse;
+import com.altong.altong_backend.schedule.employee.dto.response.CheckOutResponse;
 import com.altong.altong_backend.schedule.employee.repository.EmployeeScheduleRepository;
 import com.altong.altong_backend.schedule.entity.Schedule;
 import com.altong.altong_backend.schedule.entity.WorkStatus;
@@ -46,5 +47,34 @@ public class EmployeeScheduleService {
 
         Schedule saved = employeeScheduleRepository.save(updated);
         return CheckInResponse.from(saved);
+    }
+
+    @Transactional
+    public CheckOutResponse checkOut(Long employeeId) {
+        LocalDate today = LocalDate.now(); // 오늘 날짜 가져오기
+        LocalTime now = LocalTime.now(); // 지금 시간 가져오기
+
+        Schedule schedule = employeeScheduleRepository.findByEmployee_IdAndWorkDate(employeeId, today)
+                .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND_TODAY));
+
+        if ((schedule.getEndTime() != null)) {
+            throw new BusinessException(ErrorCode.ALREADY_CHECKED_OUT);
+        }
+
+        // 퇴근 처리
+        Schedule updated = Schedule.builder()
+                .id(schedule.getId())
+                .workDate(schedule.getWorkDate())
+                .startTime(schedule.getStartTime())
+                .endTime(now)
+                .workStatus(WorkStatus.COMPLETED)
+                .employee(schedule.getEmployee())
+                .store(schedule.getStore())
+                .build();
+
+        Schedule saved = employeeScheduleRepository.save(updated);
+
+        return CheckOutResponse.from(saved);
+
     }
 }

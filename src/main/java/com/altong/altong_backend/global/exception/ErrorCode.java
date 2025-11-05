@@ -33,7 +33,8 @@ public enum ErrorCode {
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "SC001", "스케줄 정보를 찾을 수 없습니다."),
     SCHEDULE_NOT_BELONG_TO_STORE(HttpStatus.FORBIDDEN, "SC002", "해당 매장의 스케줄이 아닙니다."),
     SCHEDULE_NOT_FOUND_TODAY(HttpStatus.NOT_FOUND, "SC003", "오늘 근무 예정이 없습니다."),
-    ALREADY_CHECKED_IN(HttpStatus.BAD_REQUEST, "SC004", "이미 출근 처리되었습니다.");
+    ALREADY_CHECKED_IN(HttpStatus.BAD_REQUEST, "SC004", "이미 출근 처리되었습니다."),
+    ALREADY_CHECKED_OUT(HttpStatus.BAD_REQUEST,"SC005","이미 퇴근 처리되었습니다.");
 
     private final HttpStatus status;
     private final String code;
