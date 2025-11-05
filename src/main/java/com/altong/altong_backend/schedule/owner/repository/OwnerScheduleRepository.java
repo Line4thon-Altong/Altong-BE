@@ -8,7 +8,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface ScheduleRepository extends JpaRepository<Schedule, Long> {
+public interface OwnerScheduleRepository extends JpaRepository<Schedule, Long> {
 
     // 특정 매장의 특정 직원 스케줄 조회
     List<Schedule> findByStore_IdAndEmployee_IdOrderByWorkDateDesc(Long storeId, Long employeeId);
