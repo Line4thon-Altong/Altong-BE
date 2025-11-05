@@ -20,7 +20,7 @@ import java.time.LocalDate;
 
 @RestController
 @AllArgsConstructor
-@Tag(name = "Schedule", description = "스케줄 관리(사장님) API")
+@Tag(name = "Schedule(Owner)", description = "스케줄 관리(사장님) API")
 public class OwnerScheduleController {
 
     private final OwnerScheduleService ownerScheduleService;
