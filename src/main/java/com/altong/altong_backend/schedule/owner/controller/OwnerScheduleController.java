@@ -4,7 +4,7 @@ import com.altong.altong_backend.global.response.ApiResponse;
 import com.altong.altong_backend.schedule.owner.dto.request.ScheduleCreateRequest;
 import com.altong.altong_backend.schedule.owner.dto.response.ScheduleListResponse;
 import com.altong.altong_backend.schedule.owner.dto.response.ScheduleResponse;
-import com.altong.altong_backend.schedule.owner.service.ScheduleService;
+import com.altong.altong_backend.schedule.owner.service.OwnerScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,10 +20,10 @@ import java.time.LocalDate;
 
 @RestController
 @AllArgsConstructor
-@Tag(name = "Schedule", description = "스케줄 관리(사장님) API")
-public class ScheduleController {
+@Tag(name = "Schedule(Owner)", description = "스케줄 관리(사장님) API")
+public class OwnerScheduleController {
 
-    private final ScheduleService scheduleService;
+    private final OwnerScheduleService ownerScheduleService;
 
     @PostMapping("/api/stores/{storeId}/employees/{employeeId}/schedules")
     @Operation(
@@ -36,7 +36,7 @@ public class ScheduleController {
     public ResponseEntity<ApiResponse<ScheduleResponse>> createSchedule(@PathVariable Long storeId,
                                                                         @PathVariable Long employeeId,
                                                                         @RequestBody ScheduleCreateRequest request) {
-        ScheduleResponse response = scheduleService.createSchedule(storeId,employeeId,request);
+        ScheduleResponse response = ownerScheduleService.createSchedule(storeId,employeeId,request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
@@ -52,7 +52,7 @@ public class ScheduleController {
             @PathVariable Long storeId,
             @PathVariable Long employeeId) {
         
-        ScheduleListResponse response = scheduleService.getEmployeeSchedules(storeId, employeeId);
+        ScheduleListResponse response = ownerScheduleService.getEmployeeSchedules(storeId, employeeId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -68,7 +68,7 @@ public class ScheduleController {
             @PathVariable Long storeId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate workDate) {
         
-        ScheduleListResponse response = scheduleService.getStoreSchedules(storeId, workDate);
+        ScheduleListResponse response = ownerScheduleService.getStoreSchedules(storeId, workDate);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
@@ -83,7 +83,7 @@ public class ScheduleController {
             @PathVariable Long storeId,
             @PathVariable Long scheduleId) {
         
-        scheduleService.deleteSchedule(storeId, scheduleId);
+        ownerScheduleService.deleteSchedule(storeId, scheduleId);
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 }
