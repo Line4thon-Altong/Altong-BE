@@ -31,7 +31,10 @@ public enum ErrorCode {
 
     // 스케줄
     SCHEDULE_NOT_FOUND(HttpStatus.NOT_FOUND, "SC001", "스케줄 정보를 찾을 수 없습니다."),
-    SCHEDULE_NOT_BELONG_TO_STORE(HttpStatus.FORBIDDEN, "SC002", "해당 매장의 스케줄이 아닙니다.");
+    SCHEDULE_NOT_BELONG_TO_STORE(HttpStatus.FORBIDDEN, "SC002", "해당 매장의 스케줄이 아닙니다."),
+
+    // AI
+    EXTERNAL_API_ERROR(HttpStatus.BAD_GATEWAY, "AI001", "AI 서버 호출 중 오류가 발생했습니다.");
 
     private final HttpStatus status;
     private final String code;
