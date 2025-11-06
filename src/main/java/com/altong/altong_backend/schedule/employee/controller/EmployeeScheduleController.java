@@ -52,8 +52,19 @@ public class EmployeeScheduleController {
 
     @GetMapping("/api/employees/{employeeId}/schedules")
     @Operation(
-            summary = "알바생 전체 스케줄 조회",
-            description = "알바생이 속한 매장의 전체 스케줄을 조회. workDate로 특정 날짜만 조회 가능",
+            summary = "스케줄 조회 (달력/출퇴근기록/내스케줄)",
+            description = """
+                    알바생이 속한 매장의 스케줄을 조회
+                    
+                    1. 달력 전체 보기: 전체 데이터 사용
+                    2. 내 스케줄만 보기: employeeId로 필터링
+                    3. 출퇴근 기록 확인: startTime/endTime만 사용
+                    4. 내 출퇴근 기록 확인: employeeId + startTime/endTime 조합 필터링
+                    
+                    [파라미터(workDate) 설정 시]
+                    - 특정 날짜만 조회
+                    - 없으면 전체 조회
+                    """,
             security = { @SecurityRequirement(name = "bearerAuth") }
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공",
