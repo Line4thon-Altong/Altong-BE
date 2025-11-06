@@ -1,5 +1,7 @@
 package com.altong.altong_backend.schedule.employee.service;
 
+import com.altong.altong_backend.employee.model.Employee;
+import com.altong.altong_backend.employee.repository.EmployeeRepository;
 import com.altong.altong_backend.global.exception.BusinessException;
 import com.altong.altong_backend.global.exception.ErrorCode;
 import com.altong.altong_backend.schedule.employee.dto.response.CheckInResponse;
@@ -7,18 +9,22 @@ import com.altong.altong_backend.schedule.employee.dto.response.CheckOutResponse
 import com.altong.altong_backend.schedule.employee.repository.EmployeeScheduleRepository;
 import com.altong.altong_backend.schedule.entity.Schedule;
 import com.altong.altong_backend.schedule.entity.WorkStatus;
+import com.altong.altong_backend.schedule.owner.dto.response.ScheduleListResponse;
+import com.altong.altong_backend.schedule.owner.dto.response.ScheduleResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class EmployeeScheduleService {
 
     private final EmployeeScheduleRepository employeeScheduleRepository;
+    private final EmployeeRepository employeeRepository;
 
     @Transactional
     public CheckInResponse checkIn(Long employeeId) {
@@ -76,5 +82,34 @@ public class EmployeeScheduleService {
 
         return CheckOutResponse.from(saved);
 
+    }
+
+    @Transactional(readOnly = true)
+    public ScheduleListResponse getEmployeeSchedules(Long employeeId, LocalDate workDate) {
+        // 알바생 조회
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
+
+        // 알바생이 속한 매장 확인
+        if (employee.getStore() == null) {
+            throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
+        }
+
+        Long storeId = employee.getStore().getId();
+        
+        List<Schedule> schedules;
+        
+        // 날짜 지정 시 해당 날짜만, 없으면 전체 조회
+        if (workDate != null) {
+            schedules = employeeScheduleRepository.findByStore_IdAndWorkDate(storeId, workDate);
+        } else {
+            schedules = employeeScheduleRepository.findByStore_IdOrderByWorkDateDesc(storeId);
+        }
+
+        List<ScheduleResponse> scheduleResponses = schedules.stream()
+                .map(ScheduleResponse::from)
+                .toList();
+
+        return new ScheduleListResponse(scheduleResponses);
     }
 }
