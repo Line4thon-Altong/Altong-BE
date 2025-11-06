@@ -10,4 +10,5 @@ public interface StoreRepository extends JpaRepository<Store, Long> {
     boolean existsByName(String name);
 
     Optional<Store> findByOwner(Owner owner);
+    Optional<Store> findByOwner_Id(Long ownerId);
 }
