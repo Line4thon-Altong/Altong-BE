@@ -36,6 +36,9 @@ public enum ErrorCode {
     ALREADY_CHECKED_IN(HttpStatus.BAD_REQUEST, "SC004", "이미 출근 처리되었습니다."),
     ALREADY_CHECKED_OUT(HttpStatus.BAD_REQUEST,"SC005","이미 퇴근 처리되었습니다."),
 
+    // 교육
+    DATABASE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E001","DB 저장 중 오류가 발생했습니다."),
+
     // AI
     EXTERNAL_API_ERROR(HttpStatus.BAD_GATEWAY, "AI001", "AI 서버 호출 중 오류가 발생했습니다.");
 

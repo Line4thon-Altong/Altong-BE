@@ -6,7 +6,6 @@ import com.altong.altong_backend.training.dto.response.TrainingManualResponse;
 import com.altong.altong_backend.training.service.TrainingManualService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,10 +18,10 @@ public class TrainingController {
     // 메뉴얼 생성
     @PostMapping("/manual")
     public ResponseEntity<ApiResponse<TrainingManualResponse>> createManual(
-            @AuthenticationPrincipal(expression = "id") Long ownerId,
+            @RequestHeader("Authorization") String token,
             @RequestBody TrainingManualRequest request
     ) {
-        TrainingManualResponse response = trainingManualService.generateManual(ownerId, request);
+        TrainingManualResponse response = trainingManualService.generateManual(token, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

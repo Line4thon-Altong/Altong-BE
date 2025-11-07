@@ -3,12 +3,17 @@ package com.altong.altong_backend.training.service;
 
 import com.altong.altong_backend.global.exception.BusinessException;
 import com.altong.altong_backend.global.exception.ErrorCode;
+import com.altong.altong_backend.global.jwt.JwtTokenProvider;
+import com.altong.altong_backend.owner.model.Owner;
+import com.altong.altong_backend.owner.repository.OwnerRepository;
 import com.altong.altong_backend.store.model.Store;
 import com.altong.altong_backend.store.repository.StoreRepository;
 import com.altong.altong_backend.training.dto.request.TrainingManualRequest;
 import com.altong.altong_backend.training.dto.response.TrainingManualResponse;
 import com.altong.altong_backend.training.model.Training;
 import com.altong.altong_backend.training.repository.TrainingRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -24,16 +29,37 @@ public class TrainingManualService {
 
     private final TrainingRepository trainingRepository;
     private final StoreRepository storeRepository;
+    private final OwnerRepository ownerRepository;
     private final RestTemplate restTemplate;
+    private final JwtTokenProvider jwt;
+    private final ObjectMapper objectMapper;
 
     @Value("${ai.manual.api-url}")
     private String MANUAL_API_URL;
 
     @Transactional
-    public TrainingManualResponse generateManual(Long ownerId, TrainingManualRequest request) {
+    public TrainingManualResponse generateManual(String token, TrainingManualRequest request) {
+        // JWT 파싱
+        String accessToken = token.replace("Bearer ", "");
+        Claims claims;
+        try {
+            claims = jwt.parse(accessToken).getBody();
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        String subject = claims.getSubject();
+        if (!subject.startsWith("OWNER:")) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ROLE);
+        }
+        Long ownerId = Long.parseLong(subject.substring(6));
+
+        // 사장님 찾기
+        Owner owner = ownerRepository.findById(ownerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
 
         // 사장님의 가게 찾기
-        Store store = storeRepository.findByOwner_Id(ownerId)
+        Store store = storeRepository.findByOwner(owner)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         // FastAPI로 요청 보내기
@@ -44,7 +70,7 @@ public class TrainingManualService {
 
         ResponseEntity<TrainingManualResponse> aiResponse =
                 restTemplate.exchange(
-                        MANUAL_API_URL + "/generate",
+                        MANUAL_API_URL,
                         HttpMethod.POST,
                         entity,
                         TrainingManualResponse.class
@@ -57,16 +83,21 @@ public class TrainingManualService {
         }
 
         // DB 저장
-        Training training = Training.builder()
-                .title(responseBody.getTitle())
-                .category(request.getBusinessType())
-                .inputText(String.join("\n", request.getGoal()) + "\n" + String.join("\n", request.getProcedure()))
-                .aiResponse(responseBody.getGoal())
-                .createdAt(LocalDateTime.now())
-                .store(store)
-                .build();
+        try {
+            Training training = Training.builder()
+                    .title(responseBody.getTitle())
+                    .goal(responseBody.getGoal())
+                    .procedure(responseBody.getProcedure())
+                    .precaution(responseBody.getPrecaution())
+                    .aiRawResponse(objectMapper.writeValueAsString(responseBody))
+                    .store(store)
+                    .createdAt(LocalDateTime.now())
+                    .build();
 
-        trainingRepository.save(training);
+            trainingRepository.save(training);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.DATABASE_ERROR);
+        }
         return responseBody;
     }
 }
