@@ -36,8 +36,10 @@ public enum ErrorCode {
     ALREADY_CHECKED_IN(HttpStatus.BAD_REQUEST, "SC004", "이미 출근 처리되었습니다."),
     ALREADY_CHECKED_OUT(HttpStatus.BAD_REQUEST,"SC005","이미 퇴근 처리되었습니다."),
 
-    // 교육
-    DATABASE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "E001","DB 저장 중 오류가 발생했습니다."),
+    // 메뉴얼
+    DATABASE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "T001","DB 저장 중 오류가 발생했습니다."),
+    MANUAL_NOT_FOUND(HttpStatus.NOT_FOUND, "T002", "메뉴얼을 찾을 수 없습니다."),
+    UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "T003", "해당 메뉴얼에 접근할 권한이 없습니다."),
 
     // AI
     EXTERNAL_API_ERROR(HttpStatus.BAD_GATEWAY, "AI001", "AI 서버 호출 중 오류가 발생했습니다.");
