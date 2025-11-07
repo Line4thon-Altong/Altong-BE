@@ -48,6 +48,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/owners/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/employees/login").permitAll()
 
+                        // 루트 페이지 접근 허용
+                        .requestMatchers("/", "/error", "/favicon.ico").permitAll()
+
                         // 그 외 요청은 인증 필요
                         .anyRequest().authenticated()
                 )
