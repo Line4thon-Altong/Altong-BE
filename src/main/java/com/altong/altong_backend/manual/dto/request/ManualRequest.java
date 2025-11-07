@@ -1,4 +1,4 @@
-package com.altong.altong_backend.training.dto.request;
+package com.altong.altong_backend.manual.dto.request;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @NoArgsConstructor
-public class TrainingManualRequest {
+public class ManualRequest {
     private String businessType;
     private String title;
     private List<String> goal;

@@ -1,10 +1,12 @@
 package com.altong.altong_backend.training.model;
 
-import com.altong.altong_backend.global.util.JsonConverter;
+import com.altong.altong_backend.employee.model.EmployeeTraining;
 import com.altong.altong_backend.store.model.Store;
+import com.altong.altong_backend.manual.model.Manual;
+import com.altong.altong_backend.quiz.model.Quiz;
+import com.altong.altong_backend.cardnews.model.CardNews;
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,20 +25,6 @@ public class Training {
     @Column(nullable = false, length = 200)
     private String title;
 
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String goal;
-
-    @Convert(converter = JsonConverter.class)
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private List<ProcedureStep> procedure;
-
-    @Convert(converter = JsonConverter.class)
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private List<String> precaution;
-
-    @Column(name = "ai_raw_response", columnDefinition = "TEXT", nullable = false)
-    private String aiRawResponse;
-
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -44,11 +32,15 @@ public class Training {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class ProcedureStep {
-        private String step;
-        private List<String> details;
-    }
+    @OneToOne(mappedBy = "training", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Manual manual;
+
+    @OneToMany(mappedBy = "training", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Quiz> quizzes;
+
+    @OneToMany(mappedBy = "training", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CardNews> cardNewsList;
+
+    @OneToMany(mappedBy = "training", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EmployeeTraining> employeeTrainings;
 }

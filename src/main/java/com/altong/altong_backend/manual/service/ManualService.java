@@ -1,4 +1,4 @@
-package com.altong.altong_backend.training.service;
+package com.altong.altong_backend.manual.service;
 
 
 import com.altong.altong_backend.global.exception.BusinessException;
@@ -8,8 +8,10 @@ import com.altong.altong_backend.owner.model.Owner;
 import com.altong.altong_backend.owner.repository.OwnerRepository;
 import com.altong.altong_backend.store.model.Store;
 import com.altong.altong_backend.store.repository.StoreRepository;
-import com.altong.altong_backend.training.dto.request.TrainingManualRequest;
-import com.altong.altong_backend.training.dto.response.TrainingManualResponse;
+import com.altong.altong_backend.manual.dto.request.ManualRequest;
+import com.altong.altong_backend.manual.dto.response.ManualResponse;
+import com.altong.altong_backend.manual.model.Manual;
+import com.altong.altong_backend.manual.repository.ManualRepository;
 import com.altong.altong_backend.training.model.Training;
 import com.altong.altong_backend.training.repository.TrainingRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,8 +27,9 @@ import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
-public class TrainingManualService {
+public class ManualService {
 
+    private final ManualRepository manualRepository;
     private final TrainingRepository trainingRepository;
     private final StoreRepository storeRepository;
     private final OwnerRepository ownerRepository;
@@ -38,7 +41,7 @@ public class TrainingManualService {
     private String MANUAL_API_URL;
 
     @Transactional
-    public TrainingManualResponse generateManual(String token, TrainingManualRequest request) {
+    public ManualResponse generateManual(String token, ManualRequest request) {
         // JWT 파싱
         String accessToken = token.replace("Bearer ", "");
         Claims claims;
@@ -66,38 +69,50 @@ public class TrainingManualService {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<TrainingManualRequest> entity = new HttpEntity<>(request, headers);
+        HttpEntity<ManualRequest> entity = new HttpEntity<>(request, headers);
 
-        ResponseEntity<TrainingManualResponse> aiResponse =
+        ResponseEntity<ManualResponse> aiResponse =
                 restTemplate.exchange(
                         MANUAL_API_URL,
                         HttpMethod.POST,
                         entity,
-                        TrainingManualResponse.class
+                        ManualResponse.class
                 );
 
-        TrainingManualResponse responseBody = aiResponse.getBody();
+        ManualResponse responseBody = aiResponse.getBody();
 
         if (responseBody == null) {
             throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
         }
 
-        // DB 저장
+        // Training & Manual 저장
         try {
+            // Training 먼저 생성
             Training training = Training.builder()
+                    .title(responseBody.getTitle())
+                    .createdAt(LocalDateTime.now())
+                    .store(store)
+                    .build();
+
+            trainingRepository.save(training);
+
+            // Manual 생성 후 training과 연결
+            Manual manual = Manual.builder()
                     .title(responseBody.getTitle())
                     .goal(responseBody.getGoal())
                     .procedure(responseBody.getProcedure())
                     .precaution(responseBody.getPrecaution())
                     .aiRawResponse(objectMapper.writeValueAsString(responseBody))
-                    .store(store)
+                    .training(training)
                     .createdAt(LocalDateTime.now())
                     .build();
 
-            trainingRepository.save(training);
+            manualRepository.save(manual);
+
+            return responseBody;
+
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.DATABASE_ERROR);
         }
-        return responseBody;
     }
 }
