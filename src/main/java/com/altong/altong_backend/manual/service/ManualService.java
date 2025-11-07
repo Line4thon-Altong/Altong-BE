@@ -4,6 +4,7 @@ package com.altong.altong_backend.manual.service;
 import com.altong.altong_backend.global.exception.BusinessException;
 import com.altong.altong_backend.global.exception.ErrorCode;
 import com.altong.altong_backend.global.jwt.JwtTokenProvider;
+import com.altong.altong_backend.manual.dto.response.ManualDetailResponse;
 import com.altong.altong_backend.owner.model.Owner;
 import com.altong.altong_backend.owner.repository.OwnerRepository;
 import com.altong.altong_backend.store.model.Store;
@@ -40,6 +41,7 @@ public class ManualService {
     @Value("${ai.manual.api-url}")
     private String MANUAL_API_URL;
 
+    // 메뉴얼 생성
     @Transactional
     public ManualResponse generateManual(String token, ManualRequest request) {
         // JWT 파싱
@@ -114,5 +116,41 @@ public class ManualService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.DATABASE_ERROR);
         }
+    }
+
+    // 메뉴얼 상세 조회
+    @Transactional(readOnly = true)
+    public ManualDetailResponse getManualByTrainingId(String token, Long trainingId) {
+        // JWT 파싱
+        String accessToken = token.replace("Bearer ", "");
+        Claims claims;
+        try {
+            claims = jwt.parse(accessToken).getBody();
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        String subject = claims.getSubject();
+        if (!subject.startsWith("OWNER:")) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ROLE);
+        }
+        Long ownerId = Long.parseLong(subject.substring(6));
+
+        // 사장님 확인
+        Owner owner = ownerRepository.findById(ownerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
+
+        // 메뉴얼 조회
+        Manual manual = manualRepository.findByTraining_Id(trainingId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MANUAL_NOT_FOUND));
+
+        // 본인 가게의 메뉴얼인지 확인
+        Store store = manual.getTraining().getStore();
+        if (!store.getOwner().getId().equals(owner.getId())) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        // DTO 변환
+        return ManualDetailResponse.from(manual);
     }
 }
