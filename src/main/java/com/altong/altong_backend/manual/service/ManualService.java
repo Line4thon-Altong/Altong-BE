@@ -7,6 +7,8 @@ import com.altong.altong_backend.global.jwt.JwtTokenProvider;
 import com.altong.altong_backend.manual.dto.response.ManualDetailResponse;
 import com.altong.altong_backend.owner.model.Owner;
 import com.altong.altong_backend.owner.repository.OwnerRepository;
+import com.altong.altong_backend.quiz.dto.response.QuizResponse;
+import com.altong.altong_backend.quiz.service.QuizService;
 import com.altong.altong_backend.store.model.Store;
 import com.altong.altong_backend.store.repository.StoreRepository;
 import com.altong.altong_backend.manual.dto.request.ManualRequest;
@@ -37,11 +39,15 @@ public class ManualService {
     private final RestTemplate restTemplate;
     private final JwtTokenProvider jwt;
     private final ObjectMapper objectMapper;
+    private final QuizService quizService;
 
     @Value("${ai.manual.api-url}")
     private String MANUAL_API_URL;
 
-    // 메뉴얼 생성
+    @Value("${ai.quiz.api-url}")
+    private String QUIZ_API_URL;
+
+    // 메뉴얼 생성 + 퀴즈 자동 생성
     @Transactional
     public ManualResponse generateManual(String token, ManualRequest request) {
         // JWT 파싱
@@ -68,6 +74,7 @@ public class ManualService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         // FastAPI로 요청 보내기
+        // 1. 메뉴얼 생성 요청
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
 
@@ -89,7 +96,7 @@ public class ManualService {
 
         // Training & Manual 저장
         try {
-            // Training 먼저 생성
+            // 2. Training 먼저 생성
             Training training = Training.builder()
                     .title(responseBody.getTitle())
                     .createdAt(LocalDateTime.now())
@@ -98,7 +105,7 @@ public class ManualService {
 
             trainingRepository.save(training);
 
-            // Manual 생성 후 training과 연결
+            // 3. Manual 생성 후 training과 연결
             Manual manual = Manual.builder()
                     .title(responseBody.getTitle())
                     .goal(responseBody.getGoal())
@@ -106,10 +113,14 @@ public class ManualService {
                     .precaution(responseBody.getPrecaution())
                     .aiRawResponse(objectMapper.writeValueAsString(responseBody))
                     .training(training)
+                    .tone(request.getTone())
                     .createdAt(LocalDateTime.now())
                     .build();
 
             manualRepository.save(manual);
+
+            // 4. 퀴즈 생성
+            QuizResponse quizResponse = quizService.generateQuiz(training.getId(), manual.getTone());
 
             return responseBody;
 

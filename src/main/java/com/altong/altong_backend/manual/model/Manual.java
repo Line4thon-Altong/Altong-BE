@@ -37,6 +37,9 @@ public class Manual {
     @Column(name = "ai_raw_response", columnDefinition = "TEXT", nullable = false)
     private String aiRawResponse;
 
+    @Column(name = "tone", nullable = false, length = 100)
+    private String tone;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
