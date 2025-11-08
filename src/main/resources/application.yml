@@ -48,3 +48,6 @@ springdoc:
 ai:
   manual:
     api-url: ${AI_MANUAL_API_URL}
+
+  quiz:
+    api-url: ${AI_QUIZ_API_URL}
