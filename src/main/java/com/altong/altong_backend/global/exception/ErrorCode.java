@@ -41,6 +41,9 @@ public enum ErrorCode {
     MANUAL_NOT_FOUND(HttpStatus.NOT_FOUND, "T002", "메뉴얼을 찾을 수 없습니다."),
     UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, "T003", "해당 메뉴얼에 접근할 권한이 없습니다."),
 
+    // 교육
+    TRAINING_NOT_FOUND(HttpStatus.NOT_FOUND, "TR001", "교육 정보를 찾을 수 없습니다."),
+
     // AI
     EXTERNAL_API_ERROR(HttpStatus.BAD_GATEWAY, "AI001", "AI 서버 호출 중 오류가 발생했습니다.");
 
