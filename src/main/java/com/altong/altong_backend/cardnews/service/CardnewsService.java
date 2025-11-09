@@ -40,6 +40,7 @@ public class CardnewsService {
      */
     @Transactional
     public CardnewsResponse generateCardnews(String token, Long trainingId, String tone) {
+        log.info("🎨 카드뉴스 생성 시작: trainingId={}, tone={}", trainingId, tone);
 
         // JWT 파싱
         String accessToken = token.replace("Bearer ", "");
@@ -72,6 +73,7 @@ public class CardnewsService {
 
         // Manual 존재 확인
         if (training.getManual() == null) {
+            log.error("❌ Training에 Manual이 없음: trainingId={}", trainingId);
             throw new BusinessException(ErrorCode.MANUAL_NOT_FOUND);
         }
 
@@ -90,16 +92,21 @@ public class CardnewsService {
         HttpEntity<CardnewsRequest> entity = new HttpEntity<>(request, headers);
 
         try {
+            log.debug("→ FastAPI 요청 전송 중: url={}, manualId={}", CARDNEWS_API_URL, manualId);
+            
             ResponseEntity<CardnewsResponse> aiResponse = restTemplate.exchange(
                     CARDNEWS_API_URL,
                     HttpMethod.POST,
                     entity,
                     CardnewsResponse.class
             );
+            
+            log.debug("← FastAPI 응답 수신: status={}", aiResponse.getStatusCode());
 
             CardnewsResponse response = aiResponse.getBody();
 
             if (response == null) {
+                log.error("❌ FastAPI 응답이 null: trainingId={}", trainingId);
                 throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
             }
 
@@ -110,10 +117,13 @@ public class CardnewsService {
                     .build();
 
             cardnewsRepository.save(cardNews);
+            log.debug("💾 CardNews DB 저장 완료: id={}, imageUrl={}", cardNews.getId(), cardNews.getImageUrl());
 
+            log.info("✅ 카드뉴스 생성 완료: trainingId={}", trainingId);
             return response;
 
         } catch (Exception e) {
+            log.error("❌ 카드뉴스 생성 실패: trainingId={}, 원인: {}", trainingId, e.getMessage());
             throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
         }
     }
