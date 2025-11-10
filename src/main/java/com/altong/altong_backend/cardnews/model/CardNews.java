@@ -16,7 +16,8 @@ public class CardNews {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "image_url", length = 255)
+    @Lob
+    @Column(columnDefinition = "TEXT")
     private String imageUrl;
 
     @OneToOne(fetch = FetchType.LAZY)
