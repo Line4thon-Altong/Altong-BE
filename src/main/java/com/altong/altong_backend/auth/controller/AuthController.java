@@ -2,10 +2,12 @@ package com.altong.altong_backend.auth.controller;
 
 import com.altong.altong_backend.auth.dto.request.SignupRequest;
 import com.altong.altong_backend.auth.dto.response.SignupResponse;
+import com.altong.altong_backend.auth.dto.response.UserInfoResponse;
 import com.altong.altong_backend.auth.service.AuthService;
 import com.altong.altong_backend.global.response.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -29,5 +31,11 @@ public class AuthController {
         String refreshToken = body.get("refreshToken");
         String newAccess = authService.refreshAccessToken(refreshToken);
         return ApiResponse.success(Map.of("accessToken", newAccess));
+    }
+
+    // 현재 로그인 유저 정보 조회
+    @GetMapping("/me")
+    public ApiResponse<UserInfoResponse> getMyInfo(Authentication auth) {
+        return ApiResponse.success(authService.getCurrentUserInfo(auth));
     }
 }

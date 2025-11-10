@@ -48,7 +48,17 @@ public class OwnerAuthService {
                 .build();
         refreshRepo.save(token);
 
-        return new OwnerLoginResponse(at, rt);
+        // 로그인 응답에 username, storeName 포함
+        String storeName = storeRepo.findByOwner(owner)
+            .map(Store::getName)
+            .orElse(null);
+
+        return OwnerLoginResponse.builder()
+            .accessToken(at)
+            .refreshToken(rt)
+            .username(owner.getUsername())
+            .storeName(storeName)
+            .build();
     }
 
     /** 비밀번호 변경 */
