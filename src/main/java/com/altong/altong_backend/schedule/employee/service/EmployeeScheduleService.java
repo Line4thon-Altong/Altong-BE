@@ -86,24 +86,21 @@ public class EmployeeScheduleService {
 
     @Transactional(readOnly = true)
     public ScheduleListResponse getEmployeeSchedules(Long employeeId, LocalDate workDate) {
-        // 알바생 조회
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
-        // 알바생이 속한 매장 확인
         if (employee.getStore() == null) {
             throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
         }
 
-        Long storeId = employee.getStore().getId();
-        
         List<Schedule> schedules;
-        
-        // 날짜 지정 시 해당 날짜만, 없으면 전체 조회
+
         if (workDate != null) {
-            schedules = employeeScheduleRepository.findByStore_IdAndWorkDate(storeId, workDate);
+            schedules = employeeScheduleRepository.findByEmployee_IdAndWorkDate(employeeId, workDate)
+                    .map(List::of)
+                    .orElseGet(List::of);
         } else {
-            schedules = employeeScheduleRepository.findByStore_IdOrderByWorkDateDesc(storeId);
+            schedules = employeeScheduleRepository.findAllByEmployee_IdOrderByWorkDateDesc(employeeId);
         }
 
         List<ScheduleResponse> scheduleResponses = schedules.stream()
@@ -112,4 +109,6 @@ public class EmployeeScheduleService {
 
         return new ScheduleListResponse(scheduleResponses);
     }
+
 }
+
