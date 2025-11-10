@@ -19,6 +19,7 @@ public class QuizDetailResponse {
     private String answer;
     private String explanation;
     private Boolean isCompleted;
+    private Boolean isCorrect;
     private String createdAt;
 
     // 사장님용
@@ -30,19 +31,38 @@ public class QuizDetailResponse {
                 .options(quiz.getOptions()) // JSON 그대로 문자열로
                 .answer(quiz.getAnswer())
                 .explanation(quiz.getExplanation())
-                .isCompleted(quiz.getIsCompleted())
+                .isCompleted(true)
+                .isCorrect(null)
                 .createdAt(quiz.getCreatedAt().toString())
                 .build();
     }
 
-    // 알바생용
+    // 알바생용 (안 푼 경우)
     public static QuizDetailResponse forEmployee(Quiz quiz) {
         return QuizDetailResponse.builder()
                 .id(quiz.getId())
                 .type(quiz.getType())
                 .question(quiz.getQuestion())
                 .options(quiz.getOptions())
-                .isCompleted(quiz.getIsCompleted())
+                .answer(null)
+                .explanation(null)
+                .isCompleted(false)
+                .isCorrect(null)
+                .createdAt(quiz.getCreatedAt().toString())
+                .build();
+    }
+
+    // 알바생용 (푼 경우)
+    public static QuizDetailResponse fromAttempt(Quiz quiz, boolean isCorrect) {
+        return QuizDetailResponse.builder()
+                .id(quiz.getId())
+                .type(quiz.getType())
+                .question(quiz.getQuestion())
+                .options(quiz.getOptions())
+                .answer(quiz.getAnswer())
+                .explanation(quiz.getExplanation())
+                .isCompleted(true)
+                .isCorrect(isCorrect)
                 .createdAt(quiz.getCreatedAt().toString())
                 .build();
     }
