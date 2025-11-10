@@ -51,3 +51,6 @@ ai:
 
   quiz:
     api-url: ${AI_QUIZ_API_URL}
+
+  cardnews:
+    api-url: ${AI_CARDNEWS_API_URL}

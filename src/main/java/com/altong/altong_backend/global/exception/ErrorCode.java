@@ -46,6 +46,9 @@ public enum ErrorCode {
     QUIZ_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "Q002", "이미 풀이가 완료된 퀴즈입니다."),
     INVALID_ANSWER(HttpStatus.BAD_REQUEST, "Q003", "선택한 답변이 유효하지 않습니다."),
 
+    // 교육
+    TRAINING_NOT_FOUND(HttpStatus.NOT_FOUND, "TR001", "교육 정보를 찾을 수 없습니다."),
+
     // AI
     EXTERNAL_API_ERROR(HttpStatus.BAD_GATEWAY, "AI001", "AI 서버 호출 중 오류가 발생했습니다.");
 
