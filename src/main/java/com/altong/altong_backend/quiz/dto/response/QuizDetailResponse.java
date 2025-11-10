@@ -21,6 +21,7 @@ public class QuizDetailResponse {
     private Boolean isCompleted;
     private String createdAt;
 
+    // 사장님용
     public static QuizDetailResponse from(Quiz quiz) {
         return QuizDetailResponse.builder()
                 .id(quiz.getId())
@@ -29,6 +30,18 @@ public class QuizDetailResponse {
                 .options(quiz.getOptions()) // JSON 그대로 문자열로
                 .answer(quiz.getAnswer())
                 .explanation(quiz.getExplanation())
+                .isCompleted(quiz.getIsCompleted())
+                .createdAt(quiz.getCreatedAt().toString())
+                .build();
+    }
+
+    // 알바생용
+    public static QuizDetailResponse forEmployee(Quiz quiz) {
+        return QuizDetailResponse.builder()
+                .id(quiz.getId())
+                .type(quiz.getType())
+                .question(quiz.getQuestion())
+                .options(quiz.getOptions())
                 .isCompleted(quiz.getIsCompleted())
                 .createdAt(quiz.getCreatedAt().toString())
                 .build();
