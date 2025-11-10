@@ -2,6 +2,7 @@ package com.altong.altong_backend.auth.service;
 
 import com.altong.altong_backend.auth.dto.request.SignupRequest;
 import com.altong.altong_backend.auth.dto.response.SignupResponse;
+import com.altong.altong_backend.auth.dto.response.UserInfoResponse;
 import com.altong.altong_backend.employee.model.Employee;
 import com.altong.altong_backend.employee.repository.EmployeeRepository;
 import com.altong.altong_backend.global.exception.BusinessException;
@@ -14,6 +15,7 @@ import com.altong.altong_backend.store.repository.StoreRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -100,5 +102,28 @@ public class AuthService {
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
+    }
+
+    // 현재 로그인 유저 정보 반환
+    public UserInfoResponse getCurrentUserInfo(Authentication auth) {
+        String principal = (String) auth.getPrincipal(); // 예: OWNER:1 or EMPLOYEE:3
+        String[] parts = principal.split(":");
+        String role = parts[0];
+        Long id = Long.parseLong(parts[1]);
+
+        String username = null;
+        String storeName = null;
+
+        if ("OWNER".equals(role)) {
+            Owner owner = ownerRepo.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
+            username = owner.getUsername();
+            storeName = storeRepo.findByOwner(owner).map(s -> s.getName()).orElse(null);
+        } else if ("EMPLOYEE".equals(role)) {
+            Employee emp = empRepo.findById(id).orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
+            username = emp.getUsername();
+            storeName = emp.getStore() != null ? emp.getStore().getName() : null;
+        }
+
+        return new UserInfoResponse(username, storeName, role);
     }
 }

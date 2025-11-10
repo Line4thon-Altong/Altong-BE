@@ -44,7 +44,14 @@ public class EmployeeAuthService {
                 .build();
         refreshRepo.save(token);
 
-        return new EmployeeLoginResponse(at, rt);
+        String storeName = emp.getStore() != null ? emp.getStore().getName() : null;
+
+        return EmployeeLoginResponse.builder()
+            .accessToken(at)
+            .refreshToken(rt)
+            .username(emp.getUsername())
+            .storeName(storeName)
+            .build();
     }
 
     /** 로그아웃 */
