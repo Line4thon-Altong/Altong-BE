@@ -39,9 +39,6 @@ public class Quiz {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    @Column(name = "is_completed", nullable = false)
-    private Boolean isCompleted = false;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "training_id", nullable = false)
     private Training training;
