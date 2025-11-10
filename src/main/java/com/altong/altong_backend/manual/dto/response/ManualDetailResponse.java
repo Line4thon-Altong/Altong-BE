@@ -20,13 +20,19 @@ public class ManualDetailResponse {
     private List<String> precaution;
     private LocalDateTime createdAt;
 
-    public static ManualDetailResponse from(Manual manual) {
+    // 추가한 부분
+    private String cardnewsImageUrl;
+
+
+
+    public static ManualDetailResponse from(Manual manual, String cardnewsImageUrl) {
         return ManualDetailResponse.builder()
                 .title(manual.getTitle())
                 .goal(manual.getGoal())
                 .procedure(manual.getProcedure())
                 .precaution(manual.getPrecaution())
                 .createdAt(manual.getCreatedAt())
+                .cardnewsImageUrl(cardnewsImageUrl)
                 .build();
     }
 }

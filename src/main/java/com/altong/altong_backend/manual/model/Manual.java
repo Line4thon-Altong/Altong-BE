@@ -47,6 +47,14 @@ public class Manual {
     @JoinColumn(name = "training_id", nullable = false)
     private Training training;
 
+    public void setTraining(Training training) {
+        this.training = training;
+        if (training.getManual() != this) {
+            training.setManual(this);
+        }
+    }
+
+
     @Getter
     @NoArgsConstructor
     @AllArgsConstructor

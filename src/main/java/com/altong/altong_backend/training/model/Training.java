@@ -38,9 +38,16 @@ public class Training {
     @OneToMany(mappedBy = "training", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Quiz> quizzes;
 
-    @OneToMany(mappedBy = "training", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CardNews> cardNewsList;
+    @OneToOne(mappedBy = "training", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    private CardNews cardNews;
 
     @OneToMany(mappedBy = "training", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<EmployeeTraining> employeeTrainings;
+
+    public void setManual(Manual manual) {
+        this.manual = manual;
+        if (manual.getTraining() != this) {
+            manual.setTraining(this);
+        }
+    }
 }

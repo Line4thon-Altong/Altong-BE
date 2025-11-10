@@ -1,6 +1,7 @@
 package com.altong.altong_backend.manual.service;
 
 
+import com.altong.altong_backend.cardnews.service.CardnewsService;
 import com.altong.altong_backend.global.exception.BusinessException;
 import com.altong.altong_backend.global.exception.ErrorCode;
 import com.altong.altong_backend.global.jwt.JwtTokenProvider;
@@ -40,6 +41,7 @@ public class ManualService {
     private final JwtTokenProvider jwt;
     private final ObjectMapper objectMapper;
     private final QuizService quizService;
+    private final CardnewsService cardnewsService;
 
     @Value("${ai.manual.api-url}")
     private String MANUAL_API_URL;
@@ -47,7 +49,7 @@ public class ManualService {
     @Value("${ai.quiz.api-url}")
     private String QUIZ_API_URL;
 
-    // 메뉴얼 생성 + 퀴즈 자동 생성
+    // 메뉴얼 생성 + 퀴즈 자동 생성 + 카드뉴스 자동 생성
     @Transactional
     public ManualResponse generateManual(String token, ManualRequest request) {
         // JWT 파싱
@@ -122,6 +124,12 @@ public class ManualService {
             // 4. 퀴즈 생성
             QuizResponse quizResponse = quizService.generateQuiz(training.getId(), manual.getTone());
 
+
+            training.setManual(manual);
+            trainingRepository.save(training);
+            // 5. 카드 뉴스 생성
+            cardnewsService.generateCardnews(training.getId(), manual.getTone());
+
             return responseBody;
 
         } catch (Exception e) {
@@ -161,7 +169,12 @@ public class ManualService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
         }
 
+        String cardnewsUrl = null;
+        if (manual.getTraining().getCardNews() != null) {
+            cardnewsUrl = manual.getTraining().getCardNews().getImageUrl();
+        }
+
         // DTO 변환
-        return ManualDetailResponse.from(manual);
+        return ManualDetailResponse.from(manual,cardnewsUrl);
     }
 }

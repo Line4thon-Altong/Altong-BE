@@ -39,43 +39,18 @@ public class CardnewsService {
      * 카드뉴스 생성 (Training ID 기반)
      */
     @Transactional
-    public CardnewsResponse generateCardnews(String token, Long trainingId, String tone) {
-
-        // JWT 파싱
-        String accessToken = token.replace("Bearer ", "");
-        Claims claims;
-        try {
-            claims = jwt.parse(accessToken).getBody();
-        } catch (Exception e) {
-            throw new BusinessException(ErrorCode.INVALID_TOKEN);
-        }
-
-        String subject = claims.getSubject();
-        if (!subject.startsWith("OWNER:")) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED_ROLE);
-        }
-        Long ownerId = Long.parseLong(subject.substring(6));
-
-        // 사장님 확인
-        Owner owner = ownerRepository.findById(ownerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
+    public CardnewsResponse generateCardnews(Long trainingId, String tone) {
+        log.info("[내부호출] 카드뉴스 생성 시작(JWT 검증 생략): trainingId={}, tone={}", trainingId, tone);
 
         // Training 확인
         Training training = trainingRepository.findById(trainingId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRAINING_NOT_FOUND));
 
-        // 본인 가게의 Training인지 확인
-        Store store = training.getStore();
-        if (!store.getOwner().getId().equals(owner.getId())) {
-            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
-        }
-
-        // Manual 존재 확인
         if (training.getManual() == null) {
+            log.error("❌ Training에 Manual이 없음: trainingId={}", trainingId);
             throw new BusinessException(ErrorCode.MANUAL_NOT_FOUND);
         }
 
-        // Manual ID 가져오기
         Long manualId = training.getManual().getId();
 
         // FastAPI 요청
@@ -90,6 +65,8 @@ public class CardnewsService {
         HttpEntity<CardnewsRequest> entity = new HttpEntity<>(request, headers);
 
         try {
+            log.debug("→ [내부호출] FastAPI 요청 전송: url={}, manualId={}", CARDNEWS_API_URL, manualId);
+
             ResponseEntity<CardnewsResponse> aiResponse = restTemplate.exchange(
                     CARDNEWS_API_URL,
                     HttpMethod.POST,
@@ -100,21 +77,23 @@ public class CardnewsService {
             CardnewsResponse response = aiResponse.getBody();
 
             if (response == null) {
+                log.error("❌ [내부호출] FastAPI 응답이 null: trainingId={}", trainingId);
                 throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
             }
 
             // DB 저장
             CardNews cardNews = CardNews.builder()
-                    .imageUrl(response.getSlides().get(0).getImageUrl())  // 4컷 만화 이미지
+                    .imageUrl(response.getSlides().get(0).getImageUrl())
                     .training(training)
                     .build();
 
             cardnewsRepository.save(cardNews);
-
+            log.info("✅ [내부호출] 카드뉴스 DB 저장 완료: id={}, trainingId={}", cardNews.getId(), trainingId);
             return response;
 
         } catch (Exception e) {
+            log.error("❌ [내부호출] 카드뉴스 생성 실패: trainingId={}, 원인: {}", trainingId, e.getMessage());
             throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
         }
     }
-}
+    }

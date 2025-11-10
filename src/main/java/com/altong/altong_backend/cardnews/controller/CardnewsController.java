@@ -67,7 +67,7 @@ public class CardnewsController {
             )
             @RequestParam(defaultValue = "friendly") String tone
     ) {
-        CardnewsResponse response = cardnewsService.generateCardnews(token, trainingId, tone);
+        CardnewsResponse response = cardnewsService.generateCardnews(trainingId, tone);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

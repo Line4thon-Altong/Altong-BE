@@ -19,7 +19,7 @@ public class CardNews {
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "training_id", nullable = false)
     private Training training;
 }
