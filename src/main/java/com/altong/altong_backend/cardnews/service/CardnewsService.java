@@ -81,6 +81,7 @@ public class CardnewsService {
                 throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
             }
 
+
             // DB 저장
             CardNews cardNews = CardNews.builder()
                     .imageUrl(response.getSlides().get(0).getImageUrl())

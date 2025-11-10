@@ -1,5 +1,7 @@
 package com.altong.altong_backend.global.jwt;
 
+import com.altong.altong_backend.global.exception.BusinessException;
+import com.altong.altong_backend.global.exception.ErrorCode;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -15,7 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -76,5 +77,24 @@ public class JwtTokenProvider {
         var authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
         return new UsernamePasswordAuthenticationToken(subject, null, authorities);
+    }
+
+    /** 토큰에서 알바생 ID 추출 */
+    public Long getEmployeeIdFromToken(String token) {
+        try {
+            Claims claims = parse(token).getBody();
+            String subject = claims.getSubject();
+
+            if (subject == null || !subject.startsWith("EMPLOYEE:")) {
+                throw new BusinessException(ErrorCode.INVALID_TOKEN);
+            }
+
+            String idPart = subject.substring("EMPLOYEE:".length());
+            return Long.parseLong(idPart);
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
     }
 }
