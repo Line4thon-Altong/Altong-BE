@@ -28,28 +28,44 @@ public class EmployeeScheduleController {
     private final EmployeeScheduleService employeeScheduleService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    @PatchMapping("/api/employees/{employeeId}/schedules/check-in")
+    @PatchMapping("/api/employees/me/schedules/check-in")
     @Operation(
             summary = "출근하기",
-            description = "알바생이 현재 시간으로 출근 처리",
+            description = "로그인된 알바생이 현재 시간으로 출근 처리",
             security = {@SecurityRequirement(name = "bearerAuth")}
     )
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "출근 성공",
-            content = @Content(schema = @Schema(implementation = CheckInResponse.class)))
-    public ResponseEntity<ApiResponse<CheckInResponse>> checkIn(@PathVariable Long employeeId) {
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "출근 성공",
+            content = @Content(schema = @Schema(implementation = CheckInResponse.class))
+    )
+    public ResponseEntity<ApiResponse<CheckInResponse>> checkIn(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        String jwt = resolveToken(authorization);
+        Long employeeId = jwtTokenProvider.getEmployeeIdFromToken(jwt);
+
         CheckInResponse response = employeeScheduleService.checkIn(employeeId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
-    @PatchMapping("/api/employees/{employeeId}/schedules/check-out")
+    @PatchMapping("/api/employees/me/schedules/check-out")
     @Operation(
             summary = "퇴근하기",
-            description = "알바생이 현재 시각으로 퇴근 처리",
+            description = "로그인된 알바생이 현재 시각으로 퇴근 처리",
             security = {@SecurityRequirement(name = "bearerAuth")}
     )
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "퇴근 성공",
-            content = @Content(schema = @Schema(implementation = CheckOutResponse.class)))
-    public ResponseEntity<ApiResponse<CheckOutResponse>> checkOut(@PathVariable Long employeeId) {
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "퇴근 성공",
+            content = @Content(schema = @Schema(implementation = CheckOutResponse.class))
+    )
+    public ResponseEntity<ApiResponse<CheckOutResponse>> checkOut(
+            @RequestHeader("Authorization") String authorization
+    ) {
+        String jwt = resolveToken(authorization);
+        Long employeeId = jwtTokenProvider.getEmployeeIdFromToken(jwt);
+
         CheckOutResponse response = employeeScheduleService.checkOut(employeeId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
