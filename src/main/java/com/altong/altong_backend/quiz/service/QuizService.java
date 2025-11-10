@@ -12,6 +12,7 @@ import com.altong.altong_backend.quiz.repository.QuizRepository;
 import com.altong.altong_backend.store.model.Store;
 import com.altong.altong_backend.training.model.Training;
 import com.altong.altong_backend.training.repository.TrainingRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
@@ -68,17 +69,23 @@ public class QuizService {
                     .orElseThrow(() -> new RuntimeException("해당 training이 존재하지 않습니다."));
 
             quizResponse.getQuizzes().forEach(q -> {
-                Quiz quiz = Quiz.builder()
-                        .type(q.getType().equalsIgnoreCase("OX") ? com.altong.altong_backend.quiz.model.QuizType.OX : com.altong.altong_backend.quiz.model.QuizType.MULTIPLE)
-                        .question(q.getQuestion())
-                        .options(objectMapper.valueToTree(q.getOptions()).toString())
-                        .answer(q.getAnswer())
-                        .explanation(q.getExplanation())
-                        .createdAt(LocalDateTime.now())
-                        .isCompleted(false)
-                        .training(training)
-                        .build();
-                quizRepository.save(quiz);
+                try {
+                    Quiz quiz = Quiz.builder()
+                            .type(q.getType().equalsIgnoreCase("OX")
+                                    ? com.altong.altong_backend.quiz.model.QuizType.OX
+                                    : com.altong.altong_backend.quiz.model.QuizType.MULTIPLE)
+                            .question(q.getQuestion())
+                            .options(objectMapper.writeValueAsString(q.getOptions()))
+                            .answer(q.getAnswer())
+                            .explanation(q.getExplanation())
+                            .createdAt(LocalDateTime.now())
+                            .training(training)
+                            .build();
+
+                    quizRepository.save(quiz);
+                } catch (JsonProcessingException e) {
+                    throw new RuntimeException("퀴즈 옵션 직렬화 실패: " + e.getMessage(), e);
+                }
             });
 
             return quizResponse;
@@ -111,7 +118,7 @@ public class QuizService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
 
         // 퀴즈 조회
-        List<Quiz> quizzes = quizRepository.findByTraining_Id(trainingId);
+        List<Quiz> quizzes = quizRepository.findByTraining_IdOrderByIdAsc(trainingId);
         if (quizzes.isEmpty()) {
             throw new BusinessException(ErrorCode.QUIZ_NOT_FOUND);
         }
