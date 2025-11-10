@@ -89,7 +89,7 @@ public class EmployeeAuthService {
     }
 
     /** 가게 연동 해제 */
-    public EmployeePasswordUpdateResponse unlinkStore(EmployeeUnlinkStoreRequest req) {
+    public EmployeeUnlinkStoreResponse unlinkStore(EmployeeUnlinkStoreRequest req) {
         Employee emp = empRepo.findById(req.getEmployeeId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_USER));
 
@@ -103,6 +103,10 @@ public class EmployeeAuthService {
                 .build();
 
         empRepo.save(emp);
-        return new EmployeePasswordUpdateResponse("가게 연동이 해제되었습니다.");
+        return new EmployeeUnlinkStoreResponse(
+            req.getEmployeeId(),
+            req.getStoreId(),
+            "가게 연동이 해제되었습니다."
+        );
     }
 }
