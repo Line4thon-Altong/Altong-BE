@@ -5,7 +5,9 @@ import com.altong.altong_backend.cardnews.service.CardnewsService;
 import com.altong.altong_backend.global.exception.BusinessException;
 import com.altong.altong_backend.global.exception.ErrorCode;
 import com.altong.altong_backend.global.jwt.JwtTokenProvider;
+import com.altong.altong_backend.manual.dto.request.ManualUpdateRequest;
 import com.altong.altong_backend.manual.dto.response.ManualDetailResponse;
+import com.altong.altong_backend.manual.dto.response.ManualUpdateResponse;
 import com.altong.altong_backend.owner.model.Owner;
 import com.altong.altong_backend.owner.repository.OwnerRepository;
 import com.altong.altong_backend.quiz.dto.response.QuizResponse;
@@ -28,6 +30,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -176,5 +180,61 @@ public class ManualService {
 
         // DTO 변환
         return ManualDetailResponse.from(manual,cardnewsUrl);
+    }
+
+    // 메뉴얼 수정
+    @Transactional
+    public ManualUpdateResponse updateManual(String token, Long trainingId, ManualUpdateRequest request) {
+        // JWT 검증
+        String accessToken = token.replace("Bearer ", "");
+        Claims claims;
+        try {
+            claims = jwt.parse(accessToken).getBody();
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        String subject = claims.getSubject();
+        if (!subject.startsWith("OWNER:")) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ROLE);
+        }
+        Long ownerId = Long.parseLong(subject.substring(6));
+
+        // 사장님 & Training & Manual 조회
+        Owner owner = ownerRepository.findById(ownerId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
+
+        Training training = trainingRepository.findById(trainingId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.TRAINING_NOT_FOUND));
+
+        Manual manual = manualRepository.findByTraining_Id(trainingId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.MANUAL_NOT_FOUND));
+
+        // 권한 확인
+        if (!training.getStore().getOwner().getId().equals(owner.getId())) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
+        // 수정 필드 반영
+        if (request.getTitle() != null) manual = manual.toBuilder().title(request.getTitle()).build();
+        if (request.getGoal() != null) manual = manual.toBuilder().goal(request.getGoal()).build();
+        if (request.getProcedure() != null) {
+            List<Manual.ProcedureStep> mappedProcedure = request.getProcedure().stream()
+                    .map(step -> new Manual.ProcedureStep(
+                            (String) step.get("step"),
+                            (List<String>) step.get("details")
+                    ))
+                    .collect(Collectors.toList());
+            manual = manual.toBuilder().procedure(mappedProcedure).build();
+        }
+        if (request.getPrecaution() != null)
+            manual = manual.toBuilder().precaution(request.getPrecaution()).build();
+
+        manualRepository.save(manual);
+
+        return ManualUpdateResponse.builder()
+                .manualId(manual.getId())
+                .message("메뉴얼이 성공적으로 수정되었습니다.")
+                .build();
     }
 }
