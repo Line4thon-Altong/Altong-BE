@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CardnewsRepository extends JpaRepository<CardNews, Long> {
+    void deleteByTrainingId(Long trainingId);
 }
