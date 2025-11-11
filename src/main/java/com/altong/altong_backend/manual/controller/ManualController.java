@@ -2,8 +2,10 @@ package com.altong.altong_backend.manual.controller;
 
 import com.altong.altong_backend.global.response.ApiResponse;
 import com.altong.altong_backend.manual.dto.request.ManualRequest;
+import com.altong.altong_backend.manual.dto.request.ManualUpdateRequest;
 import com.altong.altong_backend.manual.dto.response.ManualDetailResponse;
 import com.altong.altong_backend.manual.dto.response.ManualResponse;
+import com.altong.altong_backend.manual.dto.response.ManualUpdateResponse;
 import com.altong.altong_backend.manual.service.ManualService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,6 +42,18 @@ public class ManualController {
             @PathVariable Long trainingId
     ) {
         ManualDetailResponse response = manualService.getManualByTrainingId(token, trainingId);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
+    // 메뉴얼 수정
+    @Operation(summary = "메뉴얼 수정", description = "사장님이 생성한 교육 메뉴얼의 제목, 목표, 절차, 주의사항을 수정합니다.")
+    @PatchMapping("/{trainingId}/manuals")
+    public ResponseEntity<ApiResponse<ManualUpdateResponse>> updateManual(
+            @RequestHeader("Authorization") String token,
+            @PathVariable Long trainingId,
+            @RequestBody ManualUpdateRequest request
+    ) {
+        ManualUpdateResponse response = manualService.updateManual(token, trainingId, request);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }
