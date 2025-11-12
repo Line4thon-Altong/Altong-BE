@@ -97,6 +97,7 @@ public class EmployeeScheduleController {
     ) {
         String jwt = resolveToken(authorization);
         Long employeeId = jwtTokenProvider.getEmployeeIdFromToken(jwt);
+
         ScheduleListResponse response = employeeScheduleService.getEmployeeSchedules(employeeId, workDate,year,month);
 
         return ResponseEntity.ok(ApiResponse.success(response));

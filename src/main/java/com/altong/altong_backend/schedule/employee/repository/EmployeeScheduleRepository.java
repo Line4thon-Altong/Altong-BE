@@ -13,15 +13,13 @@ public interface EmployeeScheduleRepository extends JpaRepository<Schedule, Long
     // 특정 직원의 특정 날짜 스케줄 조회 (출근/퇴근 처리용)
     Optional<Schedule> findByEmployee_IdAndWorkDate(Long employeeId, LocalDate workDate);
 
-    // 특정 직원의 전체 스케줄 조회
-    List<Schedule> findAllByEmployee_IdOrderByWorkDateDesc(Long employeeId);
-
-    // 특정 매장의 전체 스케줄 조회
-    List<Schedule> findByStore_IdOrderByWorkDateDesc(Long storeId);
-
     // 특정 매장의 특정 날짜 스케줄 조회
     List<Schedule> findByStore_IdAndWorkDate(Long storeId, LocalDate workDate);
 
-    List<Schedule> findByEmployee_IdAndWorkDateBetweenOrderByWorkDateAsc(
-            Long employeeId, LocalDate startDate, LocalDate endDate);
+    // 전체 조회
+    List<Schedule> findByStore_IdOrderByWorkDateAsc(Long storeId);
+
+    // 해당 달 조회
+    List<Schedule> findByStore_IdAndWorkDateBetweenOrderByWorkDateAsc(
+            Long storeId, LocalDate startDate, LocalDate endDate);
 }
