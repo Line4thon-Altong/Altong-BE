@@ -6,10 +6,12 @@ import com.altong.altong_backend.schedule.owner.dto.response.ScheduleListRespons
 import com.altong.altong_backend.schedule.owner.dto.response.ScheduleResponse;
 import com.altong.altong_backend.schedule.owner.service.OwnerScheduleService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -17,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -32,11 +35,11 @@ public class OwnerScheduleController {
             security = { @SecurityRequirement(name = "bearerAuth") }
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "생성 성공",
-            content = @Content(schema = @Schema(implementation = ScheduleResponse.class)))
-    public ResponseEntity<ApiResponse<ScheduleResponse>> createSchedule(@PathVariable Long storeId,
+            content = @Content(array = @ArraySchema(schema = @Schema(implementation = ScheduleResponse.class))))
+    public ResponseEntity<ApiResponse<List<ScheduleResponse>>> createSchedule(@PathVariable Long storeId,
                                                                         @PathVariable Long employeeId,
-                                                                        @RequestBody ScheduleCreateRequest request) {
-        ScheduleResponse response = ownerScheduleService.createSchedule(storeId,employeeId,request);
+                                                                        @Valid @RequestBody ScheduleCreateRequest request) {
+        List<ScheduleResponse> response = ownerScheduleService.createSchedule(storeId,employeeId,request);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(response));
     }
 
