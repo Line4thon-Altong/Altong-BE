@@ -97,4 +97,23 @@ public class JwtTokenProvider {
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
     }
+
+    /** 토큰에서 사장님 ID 추출 */
+    public Long getOwnerIdFromToken(String token) {
+        try {
+            Claims claims = parse(token).getBody();
+            String subject = claims.getSubject();
+
+            if (subject == null || !subject.startsWith("OWNER:")) {
+                throw new BusinessException(ErrorCode.INVALID_TOKEN);
+            }
+
+            String idPart = subject.substring("OWNER:".length());
+            return Long.parseLong(idPart);
+        } catch (BusinessException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+    }
 }
