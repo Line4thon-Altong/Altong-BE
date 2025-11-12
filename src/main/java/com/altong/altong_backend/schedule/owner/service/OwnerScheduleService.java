@@ -29,7 +29,7 @@ public class OwnerScheduleService {
     private final EmployeeRepository employeeRepository;
 
     @Transactional
-    public ScheduleResponse createSchedule(Long storeId,Long employeeId,ScheduleCreateRequest request) {
+    public List<ScheduleResponse> createSchedule(Long storeId,Long employeeId,ScheduleCreateRequest request) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
@@ -41,17 +41,22 @@ public class OwnerScheduleService {
             throw new BusinessException(ErrorCode.EMPLOYEE_NOT_BELONG_TO_STORE);
         }
 
-        Schedule schedule = Schedule.builder()
-                .store(store)
-                .employee(employee)
-                .workDate(request.workDate())
-                .startTime(null) // 알바생 입력 필드
-                .endTime(null)   // 알바생 입력 필드
-                .workStatus(WorkStatus.SCHEDULED)
-                .build();
+        List<Schedule> schedules = request.workDates().stream()
+                .map(workDate -> Schedule.builder()
+                        .store(store)
+                        .employee(employee)
+                        .workDate(workDate)
+                        .startTime(null) // 알바생이 입력할 필드
+                        .endTime(null)
+                        .workStatus(WorkStatus.SCHEDULED)
+                        .build())
+                .toList();
 
-        Schedule saved = ownerScheduleRepository.save(schedule);
-        return ScheduleResponse.from(saved);
+        List<Schedule> savedSchedules = ownerScheduleRepository.saveAll(schedules);
+
+        return savedSchedules.stream()
+                .map(ScheduleResponse::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)
