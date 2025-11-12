@@ -1,5 +1,8 @@
 package com.altong.altong_backend.schedule.owner.controller;
 
+import com.altong.altong_backend.global.exception.BusinessException;
+import com.altong.altong_backend.global.exception.ErrorCode;
+import com.altong.altong_backend.global.jwt.JwtTokenProvider;
 import com.altong.altong_backend.global.response.ApiResponse;
 import com.altong.altong_backend.schedule.owner.dto.request.ScheduleCreateRequest;
 import com.altong.altong_backend.schedule.owner.dto.response.ScheduleListResponse;
@@ -27,6 +30,7 @@ import java.util.List;
 public class OwnerScheduleController {
 
     private final OwnerScheduleService ownerScheduleService;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @PostMapping("/api/stores/{storeId}/employees/{employeeId}/schedules")
     @Operation(
@@ -61,19 +65,45 @@ public class OwnerScheduleController {
 
     @GetMapping("/api/stores/{storeId}/schedules")
     @Operation(
-            summary = "매장 전체 스케줄 조회",
-            description = "사장님이 매장의 전체 스케줄을 조회. workDate로 특정 날짜만 조회 가능",
+            summary = "매장 전체 스케줄 조회 (사장님용)",
+            description = """
+            사장님이 자신의 매장 전체 스케줄을 조회합니다.
+            
+            - year, month 둘 다 있을 경우 → 해당 월 전체 조회  
+            - workDate 있을 경우 → 특정 날짜 조회  
+            - 아무것도 없으면 전체 조회  
+            
+            """,
             security = { @SecurityRequirement(name = "bearerAuth") }
     )
-    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "조회 성공",
-            content = @Content(schema = @Schema(implementation = ScheduleListResponse.class)))
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "조회 성공",
+            content = @Content(schema = @Schema(implementation = ScheduleListResponse.class))
+    )
     public ResponseEntity<ApiResponse<ScheduleListResponse>> getStoreSchedules(
+            @RequestHeader("Authorization") String authorization, //
             @PathVariable Long storeId,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate workDate) {
-        
-        ScheduleListResponse response = ownerScheduleService.getStoreSchedules(storeId, workDate);
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate workDate,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month
+    ) {
+
+        String jwt = resolveToken(authorization);
+        Long ownerId = jwtTokenProvider.getOwnerIdFromToken(jwt);
+
+        ScheduleListResponse response = ownerScheduleService.getStoreSchedules(ownerId, storeId, workDate, year, month);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
+
+    private String resolveToken(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+        return authorizationHeader.substring(7);
+    }
+
 
     @DeleteMapping("/api/stores/{storeId}/schedules/{scheduleId}")
     @Operation(

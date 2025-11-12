@@ -4,12 +4,12 @@ import com.altong.altong_backend.employee.model.Employee;
 import com.altong.altong_backend.employee.repository.EmployeeRepository;
 import com.altong.altong_backend.global.exception.BusinessException;
 import com.altong.altong_backend.global.exception.ErrorCode;
+import com.altong.altong_backend.schedule.entity.Schedule;
+import com.altong.altong_backend.schedule.entity.WorkStatus;
 import com.altong.altong_backend.schedule.owner.dto.request.ScheduleCreateRequest;
 import com.altong.altong_backend.schedule.owner.dto.response.ScheduleListResponse;
 import com.altong.altong_backend.schedule.owner.dto.response.ScheduleResponse;
 import com.altong.altong_backend.schedule.owner.repository.OwnerScheduleRepository;
-import com.altong.altong_backend.schedule.entity.Schedule;
-import com.altong.altong_backend.schedule.entity.WorkStatus;
 import com.altong.altong_backend.store.model.Store;
 import com.altong.altong_backend.store.repository.StoreRepository;
 import lombok.AllArgsConstructor;
@@ -84,18 +84,48 @@ public class OwnerScheduleService {
     }
 
     @Transactional(readOnly = true)
-    public ScheduleListResponse getStoreSchedules(Long storeId, LocalDate workDate) {
+    public ScheduleListResponse getStoreSchedules(Long ownerId,Long storeId, LocalDate workDate,Integer year,Integer month) {
 
-        storeRepository.findById(storeId)
+
+        Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
+        if (!store.getOwner().getId().equals(ownerId)) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
+        }
+
         List<Schedule> schedules;
-        
-        // 날짜 지정 시 해당 날짜만, 없으면 전체 조회
-        if (workDate != null) {
+
+        // month만 있을 때 -> 잘못된 요청
+        if (year == null && month != null) {
+            throw new BusinessException(ErrorCode.INVALID_DATE_RANGE);
+        }
+
+        // year만 있을 때 -> 해당 연도 전체 조회
+        if (year != null && month == null) {
+            LocalDate startDate = LocalDate.of(year, 1, 1);
+            LocalDate endDate = LocalDate.of(year, 12, 31);
+
+            schedules = ownerScheduleRepository.findByStore_IdAndWorkDateBetweenOrderByWorkDateAsc(
+                    storeId, startDate, endDate
+            );
+        }
+        // year, month 둘 다 있을 때 -> 월별 조회
+        else if (year != null && month != null) {
+            LocalDate startDate = LocalDate.of(year, month, 1);
+            LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+            schedules = ownerScheduleRepository.findByStore_IdAndWorkDateBetweenOrderByWorkDateAsc(
+                    storeId, startDate, endDate
+            );
+        }
+        // 특정 날짜 조회
+        else if (workDate != null) {
             schedules = ownerScheduleRepository.findByStore_IdAndWorkDate(storeId, workDate);
-        } else {
-            schedules = ownerScheduleRepository.findByStore_IdOrderByWorkDateDesc(storeId);
+        }
+        // 전체 조회
+        else {
+            schedules = ownerScheduleRepository.findByStore_IdOrderByWorkDateAsc(storeId);
         }
 
         List<ScheduleResponse> scheduleResponses = schedules.stream()
