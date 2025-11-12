@@ -39,7 +39,8 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
-                                "/webjars/**"
+                                "/webjars/**",
+                                "/api/auth/**"
                         ).permitAll()
 
                         // 인증 없이 접근 가능한 API

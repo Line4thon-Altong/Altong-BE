@@ -4,7 +4,7 @@ import com.altong.altong_backend.auth.dto.request.SignupRequest;
 import com.altong.altong_backend.auth.dto.response.SignupResponse;
 import com.altong.altong_backend.auth.dto.response.UserInfoResponse;
 import com.altong.altong_backend.auth.service.AuthService;
-import com.altong.altong_backend.global.response.ApiResponse; // ⚠️ 이건 네 프로젝트용 응답 클래스
+import com.altong.altong_backend.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
