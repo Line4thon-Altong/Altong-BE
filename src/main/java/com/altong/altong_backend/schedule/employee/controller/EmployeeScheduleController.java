@@ -74,17 +74,13 @@ public class EmployeeScheduleController {
     @Operation(
             summary = "내 스케줄 조회 (달력/출퇴근기록/내스케줄)",
             description = """
-                    로그인된 알바생의 스케줄을 JWT 토큰 기반으로 조회합니다.
-                    
-                    1. 달력 전체 보기: 전체 데이터 사용
-                    2. 내 스케줄만 보기: 토큰에서 employeeId 자동 식별
-                    3. 출퇴근 기록 확인: startTime/endTime만 사용
-                    4. 내 출퇴근 기록 확인: employeeId + startTime/endTime 조합 필터링
-                    
-                    [파라미터(workDate) 설정 시]
-                    - 특정 날짜만 조회
-                    - 없으면 전체 조회
-                    """,
+                로그인된 알바생의 스케줄을 JWT 토큰 기반으로 조회
+                
+                - year, month 둘 다 있을 경우 → 해당 월 전체 조회  
+                - workDate 있을 경우 → 특정 날짜 조회  
+                - 아무것도 없으면 전체 조회  
+                
+                """,
             security = {@SecurityRequirement(name = "bearerAuth")}
     )
     @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -95,11 +91,14 @@ public class EmployeeScheduleController {
     public ResponseEntity<ApiResponse<ScheduleListResponse>> getMySchedules(
             @RequestHeader("Authorization") String authorization,
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate workDate
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate workDate,
+            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer month
     ) {
         String jwt = resolveToken(authorization);
         Long employeeId = jwtTokenProvider.getEmployeeIdFromToken(jwt);
-        ScheduleListResponse response = employeeScheduleService.getEmployeeSchedules(employeeId, workDate);
+
+        ScheduleListResponse response = employeeScheduleService.getEmployeeSchedules(employeeId, workDate,year,month);
 
         return ResponseEntity.ok(ApiResponse.success(response));
     }

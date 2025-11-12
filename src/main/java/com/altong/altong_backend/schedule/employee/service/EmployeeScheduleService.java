@@ -85,7 +85,7 @@ public class EmployeeScheduleService {
     }
 
     @Transactional(readOnly = true)
-    public ScheduleListResponse getEmployeeSchedules(Long employeeId, LocalDate workDate) {
+    public ScheduleListResponse getEmployeeSchedules(Long employeeId, LocalDate workDate,Integer year, Integer month) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
@@ -93,14 +93,43 @@ public class EmployeeScheduleService {
             throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
         }
 
+        Long storeId = employee.getStore().getId();
+
         List<Schedule> schedules;
 
-        if (workDate != null) {
-            schedules = employeeScheduleRepository.findByEmployee_IdAndWorkDate(employeeId, workDate)
-                    .map(List::of)
-                    .orElseGet(List::of);
-        } else {
-            schedules = employeeScheduleRepository.findAllByEmployee_IdOrderByWorkDateDesc(employeeId);
+        // month만 있는 경우 -> 에러 처리
+        if (year == null && month != null) {
+            throw new BusinessException(ErrorCode.INVALID_DATE_RANGE);
+        }
+
+        // year만 있는 경우 -> 연도 전체 조회
+        if (year != null && month == null) {
+            LocalDate startDate = LocalDate.of(year, 1, 1);
+            LocalDate endDate = LocalDate.of(year, 12, 31);
+
+            schedules = employeeScheduleRepository.findByStore_IdAndWorkDateBetweenOrderByWorkDateAsc(
+                    storeId, startDate, endDate
+            );
+        }
+
+        // year + month 둘 다 있을 경우 -> 월별 조회
+        else if (year != null && month != null) {
+            LocalDate startDate = LocalDate.of(year, month, 1);
+            LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+            schedules = employeeScheduleRepository.findByStore_IdAndWorkDateBetweenOrderByWorkDateAsc(
+                    storeId, startDate, endDate
+            );
+        }
+
+        // workDate만 있을 경우 -> 특정 날짜 조회
+        else if (workDate != null) {
+            schedules = employeeScheduleRepository.findByStore_IdAndWorkDate(storeId, workDate);
+        }
+
+        // 아무것도 없으면 전체 조회
+        else {
+            schedules = employeeScheduleRepository.findByStore_IdOrderByWorkDateAsc(storeId);
         }
 
         List<ScheduleResponse> scheduleResponses = schedules.stream()
