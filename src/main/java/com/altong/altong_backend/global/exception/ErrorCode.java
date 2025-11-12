@@ -35,6 +35,8 @@ public enum ErrorCode {
     SCHEDULE_NOT_FOUND_TODAY(HttpStatus.NOT_FOUND, "SC003", "오늘 근무 예정이 없습니다."),
     ALREADY_CHECKED_IN(HttpStatus.BAD_REQUEST, "SC004", "이미 출근 처리되었습니다."),
     ALREADY_CHECKED_OUT(HttpStatus.BAD_REQUEST,"SC005","이미 퇴근 처리되었습니다."),
+    INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "SC006", "month만 단독으로 입력할 수 없습니다. year를 함께 입력해주세요."),
+
 
     // 메뉴얼
     DATABASE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "T001","DB 저장 중 오류가 발생했습니다."),
@@ -45,6 +47,9 @@ public enum ErrorCode {
     QUIZ_NOT_FOUND(HttpStatus.NOT_FOUND, "Q001", "해당 퀴즈를 찾을 수 없습니다."),
     QUIZ_ALREADY_COMPLETED(HttpStatus.BAD_REQUEST, "Q002", "이미 풀이가 완료된 퀴즈입니다."),
     INVALID_ANSWER(HttpStatus.BAD_REQUEST, "Q003", "선택한 답변이 유효하지 않습니다."),
+
+    // 교육
+    TRAINING_NOT_FOUND(HttpStatus.NOT_FOUND, "TR001", "교육 정보를 찾을 수 없습니다."),
 
     // AI
     EXTERNAL_API_ERROR(HttpStatus.BAD_GATEWAY, "AI001", "AI 서버 호출 중 오류가 발생했습니다.");

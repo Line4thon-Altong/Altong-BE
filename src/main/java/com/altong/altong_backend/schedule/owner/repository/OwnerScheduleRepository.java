@@ -10,12 +10,12 @@ import java.util.List;
 @Repository
 public interface OwnerScheduleRepository extends JpaRepository<Schedule, Long> {
 
-    // 특정 매장의 특정 직원 스케줄 조회
     List<Schedule> findByStore_IdAndEmployee_IdOrderByWorkDateDesc(Long storeId, Long employeeId);
-    
-    // 특정 매장의 전체 스케줄 조회
-    List<Schedule> findByStore_IdOrderByWorkDateDesc(Long storeId);
-    
-    // 특정 매장의 특정 날짜 스케줄 조회
+
+    List<Schedule> findByStore_IdOrderByWorkDateAsc(Long storeId);
+
     List<Schedule> findByStore_IdAndWorkDate(Long storeId, LocalDate workDate);
+
+    List<Schedule> findByStore_IdAndWorkDateBetweenOrderByWorkDateAsc(Long storeId, LocalDate startDate, LocalDate endDate);
+
 }

@@ -12,4 +12,6 @@ import java.util.List;
 public interface QuizRepository extends JpaRepository<Quiz, Long> {
     @Query("SELECT q FROM Quiz q WHERE q.training.id = :trainingId ORDER BY q.id ASC")
     List<Quiz> findByTraining_IdOrderByIdAsc(@Param("trainingId") Long trainingId);
+
+    void deleteAllByTrainingId(Long trainingId);
 }

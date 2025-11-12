@@ -54,7 +54,12 @@ public class EmployeeManualService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACCESS);
         }
 
+        String cardnewsUrl = null;
+        if (manual.getTraining().getCardNews() != null) {
+            cardnewsUrl = manual.getTraining().getCardNews().getImageUrl();
+        }
+
         // 알바생은 접근 제한 없이 동일 내용 열람 가능
-        return ManualDetailResponse.from(manual);
+        return ManualDetailResponse.from(manual,cardnewsUrl);
     }
 }

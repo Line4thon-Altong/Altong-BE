@@ -12,7 +12,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @Table(name = "manual")
 public class Manual {
 
@@ -46,6 +46,14 @@ public class Manual {
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "training_id", nullable = false)
     private Training training;
+
+    public void setTraining(Training training) {
+        this.training = training;
+        if (training.getManual() != this) {
+            training.setManual(this);
+        }
+    }
+
 
     @Getter
     @NoArgsConstructor
