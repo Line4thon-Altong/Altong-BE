@@ -21,4 +21,7 @@ public interface EmployeeScheduleRepository extends JpaRepository<Schedule, Long
 
     // 특정 매장의 특정 날짜 스케줄 조회
     List<Schedule> findByStore_IdAndWorkDate(Long storeId, LocalDate workDate);
+
+    List<Schedule> findByEmployee_IdAndWorkDateBetweenOrderByWorkDateAsc(
+            Long employeeId, LocalDate startDate, LocalDate endDate);
 }

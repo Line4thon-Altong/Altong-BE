@@ -85,21 +85,29 @@ public class EmployeeScheduleService {
     }
 
     @Transactional(readOnly = true)
-    public ScheduleListResponse getEmployeeSchedules(Long employeeId, LocalDate workDate) {
+    public ScheduleListResponse getEmployeeSchedules(Long employeeId, LocalDate workDate,Integer year, Integer month) {
         Employee employee = employeeRepository.findById(employeeId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
-        if (employee.getStore() == null) {
-            throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
-        }
-
         List<Schedule> schedules;
 
-        if (workDate != null) {
+        // year, month 있으면 월별 조회
+        if (year != null && month != null) {
+            LocalDate startDate = LocalDate.of(year, month, 1);
+            LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
+
+            schedules = employeeScheduleRepository.findByEmployee_IdAndWorkDateBetweenOrderByWorkDateAsc(
+                    employeeId, startDate, endDate
+            );
+        }
+        // workDate 있으면 특정 날짜 조회
+        else if (workDate != null) {
             schedules = employeeScheduleRepository.findByEmployee_IdAndWorkDate(employeeId, workDate)
                     .map(List::of)
                     .orElseGet(List::of);
-        } else {
+        }
+        // 전체 조회
+        else {
             schedules = employeeScheduleRepository.findAllByEmployee_IdOrderByWorkDateDesc(employeeId);
         }
 
