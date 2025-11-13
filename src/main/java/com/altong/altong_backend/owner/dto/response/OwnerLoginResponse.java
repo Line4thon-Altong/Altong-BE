@@ -1,16 +1,16 @@
 package com.altong.altong_backend.owner.dto.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 import lombok.Builder;
+import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
 @Builder
 public class OwnerLoginResponse {
+    private Long id;
+    private String username;
+    private Long storeId;
+    private String storeName;
+    private String role;
     private String accessToken;
     private String refreshToken;
-
-    private String username;
-    private String storeName;
 }

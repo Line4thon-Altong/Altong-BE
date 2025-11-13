@@ -1,14 +1,14 @@
 package com.altong.altong_backend.employee.controller;
 
+import com.altong.altong_backend.global.jwt.JwtTokenProvider;
 import com.altong.altong_backend.global.response.ApiResponse;
-import com.altong.altong_backend.employee.service.EmployeeAuthService;
 import com.altong.altong_backend.employee.dto.request.*;
 import com.altong.altong_backend.employee.dto.response.*;
-import com.altong.altong_backend.global.jwt.JwtTokenProvider;
+import com.altong.altong_backend.employee.service.EmployeeAuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,12 +16,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * EmployeeAuthController
- *
- * 알바(EMPLOYEE) 회원의 로그인 / 비밀번호 변경 / 가게 연동 해제 / 로그아웃 관련 API
- * Swagger 문서화로 제약조건 / 예외상황 / 테스트 방법을 상세히 기술함.
- */
 @RestController
 @RequestMapping("/api/employees")
 @RequiredArgsConstructor
@@ -31,66 +25,77 @@ public class EmployeeAuthController {
     private final EmployeeAuthService service;
     private final JwtTokenProvider jwt;
 
-    // ===============================
-    // 1️. 로그인
-    // ===============================
+    // =========================================================================
+    // 1. 알바 로그인
+    // =========================================================================
     @Operation(
         summary = "알바 로그인",
         description = """
-        ### 개요  
-        - 알바 계정 로그인 시 AccessToken / RefreshToken을 발급합니다.
+            # 개요
+            알바(EMPLOYEE) 계정 로그인 시 **AccessToken / RefreshToken을 발급**합니다.
 
-        ### 제약조건  
-        - `username`, `password` 필수 입력
-        - 잘못된 비밀번호 시 401 Unauthorized
+            ---
 
-        ### 예외상황  
-        | 코드 | 상태 | 설명 |
-        |------|------|------|
-        | `A003` | 404 | 사용자 정보 없음 |
-        | `A004` | 401 | 비밀번호 불일치 |
-        | `G001` | 400 | 필수값 누락 |
+            # 요청 형식
+            |필드|설명|
+            |----|----|
+            |username|알바 로그인 ID (필수)|
+            |password|비밀번호 (필수)|
 
-        ### 테스트 방법  
-        ```json
-        {
-          "username": "emp01",
-          "password": "abcd1234!"
-        }
-        ```
-        """
+            DTO 유효성 검증 실패 시 → `G001 INVALID_INPUT_VALUE`
+
+            ---
+
+            # 예시 요청
+            ```json
+            {
+              "username": "emp01",
+              "password": "abcd1234!"
+            }
+            ```
+
+            ---
+
+            # 성공 응답 예시
+            ```json
+            {
+              "code": "SUCCESS",
+              "data": {
+                "id": 3,
+                "username": "emp01",
+                "name": "홍길동",
+                "displayName": "홍길동",
+                "storeId": 10,
+                "storeName": "알통치킨 평택점",
+                "role": "EMPLOYEE",
+                "accessToken": "eyJhbGciOi...",
+                "refreshToken": "eyJhbGciOi..."
+              }
+            }
+            ```
+
+            ---
+
+            # 에러 상황 / 코드 표
+
+            |코드|HTTP|설명|
+            |----|----|----|
+            |A003 (NOT_FOUND_USER)|404|username 존재하지 않음|
+            |A004 (INVALID_CREDENTIALS)|401|비밀번호 불일치|
+            |G001 (INVALID_INPUT_VALUE)|400|username 또는 password 필드 누락|
+
+            ---
+
+            # 테스트 방법
+            1. 정상 username + password로 로그인 → 토큰 발급 확인  
+            2. password 틀리게 입력 → INVALID_CREDENTIALS 확인  
+            3. username 누락 → INVALID_INPUT_VALUE 확인  
+            """
     )
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200",
-            description = "로그인 성공",
-            content = @Content(schema = @Schema(implementation = EmployeeLoginResponse.class),
-                examples = @ExampleObject(value = """
-                {
-                  "code": "SUCCESS",
-                  "message": "요청이 성공적으로 처리되었습니다.",
-                  "data": {
-                    "accessToken": "eyJhbGciOi...",
-                    "refreshToken": "eyJhbGciOi...",
-                    "username": "emp01",
-                    "storeName": "알통치킨 평택점"
-                  }
-                }
-                """))
-        ),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "401",
-            description = "비밀번호 불일치",
-            content = @Content(examples = @ExampleObject(value = """
-                { "code": "A004", "message": "비밀번호가 올바르지 않습니다.", "data": null }
-                """))
-        ),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "404",
-            description = "사용자 없음",
-            content = @Content(examples = @ExampleObject(value = """
-                { "code": "A003", "message": "해당 사용자를 찾을 수 없습니다.", "data": null }
-                """))
+            responseCode = "200", description = "로그인 성공",
+            content = @Content(schema = @Schema(implementation = EmployeeLoginResponse.class))
         )
     })
     @PostMapping("/login")
@@ -98,166 +103,173 @@ public class EmployeeAuthController {
         return ApiResponse.success(service.login(req));
     }
 
-    // ===============================
-// 2️. 비밀번호 변경
-// ===============================
+    // =========================================================================
+    // 2. 비밀번호 변경
+    // =========================================================================
     @Operation(
         summary = "비밀번호 변경",
         description = """
-        ### 개요  
-        - 알바가 자신의 비밀번호를 변경합니다.
-        - JWT Access Token을 통해 로그인한 알바의 ID를 식별합니다.
+            # 개요
+            로그인한 알바가 **본인 비밀번호를 변경**합니다.  
+            AccessToken에서 employeeId를 추출하여 본인 인증을 수행합니다.
 
-        ### 제약조건  
-        - 헤더: `Authorization: Bearer {accessToken}` 필수  
-        - Body: `oldPassword`, `newPassword` 필수
+            ---
 
-        ### 예외상황  
-        | 코드 | 상태 | 설명 |
-        |------|------|------|
-        | `A004` | 401 | 기존 비밀번호 불일치 |
-        | `A003` | 404 | 사용자 없음 |
-        | `G001` | 400 | 잘못된 요청 |
+            # 요청 형식
+            |필드|설명|
+            |----|----|
+            |oldPassword|기존 비밀번호 (필수)|
+            |newPassword|새 비밀번호 (필수)|
 
-        ### 테스트 방법  
-        1. **/api/employees/login** 호출 후 AccessToken 발급  
-        2. Swagger 상단의 **Authorize** 버튼 클릭 →  
-           `"Bearer eyJhbGciOi..."` 형식으로 토큰 입력  
-        3. 아래 JSON Body 전송  
-    
-        ```json
-        {
-          "oldPassword": "abcd1234!",
-          "newPassword": "newPass!123"
-        }
-        ```
-        """
+            ---
+
+            # 예시 요청
+            ```json
+            {
+              "oldPassword": "abcd1234!",
+              "newPassword": "newPass!123"
+            }
+            ```
+
+            ---
+
+            # 성공 응답
+            ```json
+            { "code": "SUCCESS", "data": { "message": "비밀번호 변경 완료" } }
+            ```
+
+            ---
+
+            # 에러 상황 / 코드 표
+
+            |코드|HTTP|설명|
+            |----|----|----|
+            |A004 (INVALID_CREDENTIALS)|401|기존 비번 불일치|
+            |A003 (NOT_FOUND_USER)|404|사용자 없음|
+            |INVALID_TOKEN|401|토큰 만료 / 변조|
+            |G001|400|필수값 누락|
+
+            ---
+
+            # 테스트 방법
+            1. 로그인 후 발급된 AccessToken을 Swagger Authorize에 입력  
+            2. 기존 비번/새 비번 전송 → 성공 확인  
+            3. 기존 비번 틀리게 입력 → INVALID_CREDENTIALS 확인  
+            """
     )
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200",
-            description = "비밀번호 변경 성공",
-            content = @Content(examples = @ExampleObject(value = """
-            { "code": "SUCCESS", "message": "비밀번호가 성공적으로 변경되었습니다.", "data": null }
-            """))
-        ),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "401",
-            description = "비밀번호 불일치",
-            content = @Content(examples = @ExampleObject(value = """
-            { "code": "A004", "message": "기존 비밀번호가 일치하지 않습니다.", "data": null }
-            """))
-        )
-    })
     @PatchMapping("/password")
     public ApiResponse<EmployeePasswordUpdateResponse> updatePassword(
         HttpServletRequest request,
         @RequestBody @Valid EmployeePasswordUpdateRequest req
     ) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            throw new IllegalArgumentException("유효하지 않은 Authorization 헤더입니다.");
-        }
-
-        String token = authHeader.substring(7);  // "Bearer " 제거
+        String token = extractToken(request);
         Long empId = jwt.getEmployeeIdFromToken(token);
-
         return ApiResponse.success(service.updatePassword(empId, req));
     }
 
-    // ===============================
-    // 3️. 가게 연동 해제
-    // ===============================
+    // =========================================================================
+    // 3. 가게 연동 해제
+    // =========================================================================
     @Operation(
         summary = "가게 연동 해제",
         description = """
-        ### 개요  
-        - 알바가 기존에 연동된 가게(store)와의 연결을 해제합니다.
+            # 개요
+            employeeId 또는 storeId를 전달하지 않고,  
+            **AccessToken 기반으로 자동 식별하여 가게 연동을 해제**합니다.
 
-        ### 제약조건  
-        - Path: `employeeId` 필수  
-        - Query: `storeId` 필수  
+            ---
 
-        ### 예외상황  
-        | 코드 | 상태 | 설명 |
-        |------|------|------|
-        | `A003` | 404 | 사용자 혹은 가게 정보 없음 |
-        | `G001` | 400 | 요청 형식 오류 |
+            # 성공 응답 예시
+            ```json
+            {
+              "code": "SUCCESS",
+              "data": {
+                "employeeId": 5,
+                "storeId": null,
+                "message": "가게 연동이 해제되었습니다."
+              }
+            }
+            ```
 
-        ### 테스트 방법  
-        - URL 예시  
-        ```
-        DELETE /api/employees/2/unlink-store?storeId=5
-        ```
-        """
+            ---
+
+            # 에러 상황 / 코드
+
+            |코드|HTTP|설명|
+            |----|----|----|
+            |INVALID_TOKEN|401|유효하지 않은 AccessToken|
+            |A003 (NOT_FOUND_USER)|404|알바 정보 없음|
+
+            ---
+
+            # 테스트 방법
+            1. 로그인 → AccessToken 준비  
+            2. Authorize에 입력 후 /unlink-store 호출  
+            3. employee.store = null 되는지 확인  
+            4. 토큰 변조 후 재요청 → INVALID_TOKEN 확인  
+            """
     )
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200",
-            description = "가게 연동 해제 성공",
-            content = @Content(examples = @ExampleObject(value = """
-                { "code": "SUCCESS", "message": "가게 연동이 해제되었습니다.", "data": null }
-                """))
-        ),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "404",
-            description = "대상 없음",
-            content = @Content(examples = @ExampleObject(value = """
-                { "code": "A003", "message": "해당 알바 또는 가게를 찾을 수 없습니다.", "data": null }
-                """))
-        )
-    })
-    @DeleteMapping("/{employeeId}/unlink-store")
-    public ApiResponse<EmployeeUnlinkStoreResponse> unlinkStore(
-        @PathVariable Long employeeId,
-        @RequestParam Long storeId
-    ) {
-        EmployeeUnlinkStoreRequest req = new EmployeeUnlinkStoreRequest(employeeId, storeId);
-        return ApiResponse.success(service.unlinkStore(req));
+    @DeleteMapping("/unlink-store")
+    public ApiResponse<EmployeeUnlinkStoreResponse> unlinkStore(HttpServletRequest request) {
+        String token = extractToken(request);
+        Long empId = jwt.getEmployeeIdFromToken(token);
+        return ApiResponse.success(service.unlinkStore(empId));
     }
 
-    // ===============================
-    // 4️. 로그아웃
-    // ===============================
+    // =========================================================================
+    // 4. 로그아웃
+    // =========================================================================
     @Operation(
         summary = "로그아웃",
         description = """
-        ### 개요  
-        - Refresh Token을 만료시켜 로그아웃을 처리합니다.
+            # 개요
+            로그인한 알바의 **Refresh Token을 삭제하여 로그아웃** 처리합니다.
 
-        ### 제약조건  
-        - Body: `refreshToken` 필수  
+            ---
 
-        ### 예외상황  
-        | 코드 | 상태 | 설명 |
-        |------|------|------|
-        | `A004` | 401 | 토큰 검증 실패 |
-        | `G001` | 400 | 잘못된 요청 |
+            # 요청 형식
+            ```json
+            { "refreshToken": "eyJhbGciOi..." }
+            ```
 
-        ### 테스트 방법  
-        ```json
-        { "refreshToken": "eyJhbGciOi..." }
-        ```
-        """
+            ---
+
+            # 성공 응답
+            ```json
+            { "code": "SUCCESS", "data": { "message": "로그아웃 완료" } }
+            ```
+
+            ---
+
+            # 에러 상황 / 코드
+
+            |코드|HTTP|설명|
+            |----|----|----|
+            |INVALID_TOKEN|401|RefreshToken 파싱 실패|
+            |A003|404|사용자 없음|
+            |G001|400|필드 누락|
+
+            ---
+
+            # 테스트 방법
+            1. 로그인 후 발급된 refreshToken을 body에 전송  
+            2. Logout 후 해당 refreshToken이 DB에서 삭제되는지 확인  
+            3. 잘못된 토큰 보내기 → INVALID_TOKEN 확인  
+            """
     )
-    @ApiResponses({
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200",
-            description = "로그아웃 성공",
-            content = @Content(examples = @ExampleObject(value = """
-                { "code": "SUCCESS", "message": "로그아웃이 완료되었습니다.", "data": null }
-                """))
-        ),
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "401",
-            description = "토큰 오류",
-            content = @Content(examples = @ExampleObject(value = """
-                { "code": "A004", "message": "유효하지 않은 토큰입니다.", "data": null }
-                """))
-        )
-    })
     @PostMapping("/logout")
     public ApiResponse<EmployeeLogoutResponse> logout(@RequestBody @Valid EmployeeLogoutRequest req) {
         return ApiResponse.success(service.logout(req));
+    }
+
+    // =========================================================================
+    // 공통 메서드
+    // =========================================================================
+    private String extractToken(HttpServletRequest request) {
+        String header = request.getHeader("Authorization");
+        if (header == null || !header.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("유효하지 않은 Authorization 헤더입니다.");
+        }
+        return header.substring(7);
     }
 }

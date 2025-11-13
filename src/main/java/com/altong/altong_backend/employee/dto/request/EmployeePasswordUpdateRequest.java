@@ -2,11 +2,13 @@ package com.altong.altong_backend.employee.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
 public class EmployeePasswordUpdateRequest {
-    @NotBlank private String oldPassword;
-    @NotBlank private String newPassword;
+
+    @NotBlank
+    private String oldPassword;
+
+    @NotBlank
+    private String newPassword;
 }

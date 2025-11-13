@@ -3,11 +3,7 @@ package com.altong.altong_backend.employee.model;
 import com.altong.altong_backend.schedule.entity.Schedule;
 import com.altong.altong_backend.store.model.Store;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -39,27 +35,25 @@ public class Employee {
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy="employee",cascade=CascadeType.ALL)
+    @OneToMany(mappedBy = "employee", cascade = CascadeType.ALL)
     private List<Schedule> schedules;
 
     @Column
     private LocalDateTime addedAt;
 
-    public Employee assignToStore(Store store) {
-        return Employee.builder()
-                .id(this.id)
-                .name(this.name)
-                .username(this.username)
-                .password(this.password)
-                .store(store)
-                .createdAt(this.createdAt)
-                .addedAt(LocalDateTime.now())
-                .build();
+    // Refresh Token
+    @Column(length = 500)
+    private String refreshToken;
+
+    public void updateRefreshToken(String token) {
+        this.refreshToken = token;
+    }
+
+    public void updatePassword(String newPassword) {
+        this.password = newPassword;
     }
 
     public void updateStore(Store store) {
         this.store = store;
     }
-
-    
 }

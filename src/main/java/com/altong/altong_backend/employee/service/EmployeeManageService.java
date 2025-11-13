@@ -30,12 +30,15 @@ public class EmployeeManageService {
     private final StoreRepository storeRepo;
     private final EmployeeRepository employeeRepo;
 
-    // 알바생 추가
+    // =============================
+    // 1. 알바 추가
+    // =============================
     @Transactional
     public EmployeeAddResponse addEmployee(String token, EmployeeAddRequest req) {
-        // JWT 토큰 파싱
+
         String accessToken = token.replace("Bearer ", "");
         Claims claims;
+
         try {
             claims = jwt.parse(accessToken).getBody();
         } catch (Exception e) {
@@ -46,31 +49,37 @@ public class EmployeeManageService {
         if (!subject.startsWith("OWNER:")) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ROLE);
         }
+
         Long ownerId = Long.parseLong(subject.substring(6));
 
-        // 사장님 조회
         Owner owner = ownerRepo.findById(ownerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
 
-        // 가게 조회
         Store store = storeRepo.findByOwner(owner)
-                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
-        // 알바생 존재 확인
         Employee emp = employeeRepo.findByUsername(req.getEmployeeUsername())
-                .orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
-        Employee updated = emp.assignToStore(store);
-        employeeRepo.save(updated);
+        emp.updateStore(store);
+        emp = employeeRepo.save(emp);
 
-        return new EmployeeAddResponse("알바생을 추가했습니다.");
+        return EmployeeAddResponse.builder()
+            .employeeId(emp.getId())
+            .storeId(store.getId())
+            .message("알바생을 추가했습니다.")
+            .build();
     }
 
-    // 알바생 목록 조회
+    // =============================
+    // 2. 알바 목록
+    // =============================
     @Transactional(readOnly = true)
     public List<EmployeeListResponse> getEmployees(String token) {
+
         String accessToken = token.replace("Bearer ", "");
         Claims claims;
+
         try {
             claims = jwt.parse(accessToken).getBody();
         } catch (Exception e) {
@@ -81,30 +90,35 @@ public class EmployeeManageService {
         if (!subject.startsWith("OWNER:")) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ROLE);
         }
+
         Long ownerId = Long.parseLong(subject.substring(6));
 
         Owner owner = ownerRepo.findById(ownerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
 
         Store store = storeRepo.findByOwner(owner)
-                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         return employeeRepo.findByStore(store).stream()
-                .sorted(Comparator.comparing(Employee::getAddedAt).reversed())
-                .map(emp -> EmployeeListResponse.builder()
-                        .id(emp.getId())
-                        .username(emp.getUsername())
-                        .name(emp.getName())
-                        .addedAt(emp.getAddedAt())
-                        .build())
-                .toList();
+            .sorted(Comparator.comparing(Employee::getAddedAt).reversed())
+            .map(emp -> EmployeeListResponse.builder()
+                .id(emp.getId())
+                .username(emp.getUsername())
+                .name(emp.getName())
+                .addedAt(emp.getAddedAt())
+                .build())
+            .toList();
     }
 
-    // 알바생 삭제
+    // =============================
+    // 3. 알바 삭제
+    // =============================
     @Transactional
     public EmployeeDeleteResponse deleteEmployee(String token, Long employeeId) {
+
         String accessToken = token.replace("Bearer ", "");
         Claims claims;
+
         try {
             claims = jwt.parse(accessToken).getBody();
         } catch (Exception e) {
@@ -115,23 +129,22 @@ public class EmployeeManageService {
         if (!subject.startsWith("OWNER:")) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ROLE);
         }
+
         Long ownerId = Long.parseLong(subject.substring(6));
 
         Owner owner = ownerRepo.findById(ownerId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
 
         Store store = storeRepo.findByOwner(owner)
-                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
         Employee employee = employeeRepo.findById(employeeId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
+            .orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
-        // 해당 가게의 알바생인지 검증
         if (employee.getStore() == null || !employee.getStore().getId().equals(store.getId())) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ACTION);
         }
 
-        // 가게 연결 해제
         employee.updateStore(null);
         employeeRepo.save(employee);
 

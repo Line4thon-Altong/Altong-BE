@@ -2,11 +2,13 @@ package com.altong.altong_backend.owner.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
-@NoArgsConstructor
 public class OwnerLoginRequest {
-    @NotBlank private String username;
-    @NotBlank private String password;
+
+    @NotBlank(message = "username은 필수입니다.")
+    private String username;
+
+    @NotBlank(message = "password는 필수입니다.")
+    private String password;
 }

@@ -7,8 +7,9 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor
 public class SignupRequest {
-    @NotBlank
-    private String role; // OWNER | EMPLOYEE
+
+    @Pattern(regexp = "^(OWNER|EMPLOYEE)$")
+    private String role;
 
     @NotBlank
     @Size(min = 4, max = 50)
@@ -18,6 +19,7 @@ public class SignupRequest {
     @Size(min = 8, max = 200)
     private String password;
 
-    private String name;       // EMPLOYEE 용
-    private String storeName;  // OWNER 용
+    private String name;
+
+    private String storeName;
 }

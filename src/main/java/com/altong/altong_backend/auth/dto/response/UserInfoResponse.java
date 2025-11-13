@@ -1,19 +1,16 @@
 package com.altong.altong_backend.auth.dto.response;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
-@AllArgsConstructor
+@Builder
 public class UserInfoResponse {
 
-    @Schema(description = "유저 이름", example = "altong_user")
-    private String username;
-
-    @Schema(description = "상호명", example = "알통치킨 평택점")
+    private Long id;            // 숫자 PK
+    private String username;    // 계정 ID
+    private String displayName; // 사장 = 가게명, 알바 = 본명
+    private Long storeId;
     private String storeName;
-
-    @Schema(description = "역할", example = "OWNER or EMPLOYEE")
     private String role;
 }

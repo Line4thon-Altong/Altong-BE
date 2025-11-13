@@ -31,4 +31,8 @@ public class Store {
 
     @OneToMany(mappedBy="store",cascade=CascadeType.ALL)
     private List<Schedule> schedules;
+
+    public void updateName(String newName) {
+        this.name = newName;
+    }
 }
