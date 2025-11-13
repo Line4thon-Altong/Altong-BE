@@ -173,7 +173,7 @@ public class ManualService {
             trainingRepository.save(training);
             // 5. 카드 뉴스 생성
             log.info("카드뉴스 생성 시작");
-            cardnewsService.generateCardnews(training.getId(), manual.getTone());
+            cardnewsService.generateCardnews(training.getId());
             log.info("카드뉴스 생성 완료");
 
             return responseBody;
