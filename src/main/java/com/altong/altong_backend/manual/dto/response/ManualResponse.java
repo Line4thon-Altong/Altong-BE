@@ -13,4 +13,5 @@ public class ManualResponse {
     private String goal;
     private List<Manual.ProcedureStep> procedure;
     private List<String> precaution;
+
 }
