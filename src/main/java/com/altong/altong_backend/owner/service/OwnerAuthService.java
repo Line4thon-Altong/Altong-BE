@@ -94,9 +94,21 @@ public class OwnerAuthService {
     public OwnerLogoutResponse logout(OwnerLogoutRequest req) {
 
         String token = req.getRefreshToken();
-        String subject = jwt.parse(token).getBody().getSubject();  // OWNER:3
 
-        if (!subject.startsWith("OWNER:")) {
+        if (token == null || token.trim().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        token = token.trim();
+
+        String subject;
+        try {
+            subject = jwt.parse(token).getBody().getSubject();
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        if (subject == null || !subject.startsWith("OWNER:")) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
 

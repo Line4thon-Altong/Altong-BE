@@ -97,9 +97,20 @@ public class EmployeeAuthService {
 
         String token = req.getRefreshToken();
 
-        String subject = jwt.parse(token).getBody().getSubject(); // EMPLOYEE:3
+        if (token == null || token.trim().isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
 
-        if (!subject.startsWith("EMPLOYEE:")) {
+        token = token.trim();
+
+        String subject;
+        try {
+            subject = jwt.parse(token).getBody().getSubject();
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INVALID_TOKEN);
+        }
+
+        if (subject == null || !subject.startsWith("EMPLOYEE:")) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
 

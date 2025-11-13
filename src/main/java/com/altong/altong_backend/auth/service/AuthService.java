@@ -60,7 +60,7 @@ public class AuthService {
             .build();
         store = storeRepo.save(store);
 
-        // 3) Owner.store 연결 (너네 지금 이 코드 없음!)
+        // 3) Owner.store 연결
         owner.updateStore(store);
         ownerRepo.save(owner);
 
