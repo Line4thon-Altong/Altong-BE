@@ -45,24 +45,20 @@ public class AuthService {
         if (ownerRepo.existsByUsername(req.getUsername()))
             throw new BusinessException(ErrorCode.DUPLICATE_USERNAME);
 
-        // 1) Owner 저장
         Owner owner = Owner.builder()
             .username(req.getUsername())
             .password(encoder.encode(req.getPassword()))
             .createdAt(LocalDateTime.now())
             .build();
+
         owner = ownerRepo.save(owner);
 
-        // 2) Store 생성
         Store store = Store.builder()
             .name(req.getStoreName())
-            .owner(owner)   // Store → Owner 참조
+            .owner(owner)
             .build();
-        store = storeRepo.save(store);
 
-        // 3) Owner.store 연결
-        owner.updateStore(store);
-        ownerRepo.save(owner);
+        store = storeRepo.save(store);
 
         return SignupResponse.builder()
             .id(owner.getId())
@@ -73,7 +69,6 @@ public class AuthService {
             .createdAt(owner.getCreatedAt())
             .build();
     }
-
 
     private SignupResponse signupEmployee(SignupRequest req) {
         if (empRepo.existsByUsername(req.getUsername()))
@@ -104,10 +99,9 @@ public class AuthService {
         try {
             Jws<Claims> claims = jwt.parse(refreshToken);
             Claims body = claims.getBody();
-            String subject = body.getSubject();  // ex: OWNER:3
+            String subject = body.getSubject();
             String role = body.get("role", String.class);
             return jwt.createAccessToken(subject, role);
-
         } catch (Exception e) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
         }
@@ -116,49 +110,44 @@ public class AuthService {
     // =============== 내 정보 조회 ===============
     public UserInfoResponse getCurrentUserInfo(Authentication auth) {
 
-        String principal = auth.getName();
-
+        String principal = auth.getName();   // ex: OWNER:3
         String[] parts = principal.split(":");
         String role = parts[0];
         Long userId = Long.parseLong(parts[1]);
 
+        // ================================
+        // OWNER
+        // ================================
         if (role.equals("OWNER")) {
+
             Owner owner = ownerRepo.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_USER));
+
+            Store store = storeRepo.findByOwner(owner)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
             return UserInfoResponse.builder()
                 .id(owner.getId())
                 .username(owner.getUsername())
-                .displayName(owner.getStore().getName()) // 사장 = 가게명
-                .storeId(owner.getStore().getId())
-                .storeName(owner.getStore().getName())
+                .displayName(store.getName())     // 사장 = 가게명
+                .storeId(store.getId())
+                .storeName(store.getName())
                 .role("OWNER")
                 .build();
         }
 
+        // ================================
+        // EMPLOYEE
+        // ================================
         Employee emp = empRepo.findById(userId)
             .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_USER));
-
-        return UserInfoResponse.builder()
-            .id(emp.getId())
-            .username(emp.getUsername())
-            .displayName(emp.getName()) // 알바 = 본명
-            .storeId(emp.getStore() != null ? emp.getStore().getId() : null)
-            .storeName(emp.getStore() != null ? emp.getStore().getName() : null)
-            .role("EMPLOYEE")
-            .build();
-    }
-
-    private UserInfoResponse getEmployeeInfo(Long id) {
-        Employee emp = empRepo.findById(id)
-            .orElseThrow(() -> new BusinessException(ErrorCode.EMPLOYEE_NOT_FOUND));
 
         Store store = emp.getStore();
 
         return UserInfoResponse.builder()
             .id(emp.getId())
             .username(emp.getUsername())
-            .displayName(emp.getName())
+            .displayName(emp.getName())          // 알바 = 본명
             .storeId(store != null ? store.getId() : null)
             .storeName(store != null ? store.getName() : null)
             .role("EMPLOYEE")

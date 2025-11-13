@@ -7,6 +7,7 @@ import com.altong.altong_backend.owner.dto.request.*;
 import com.altong.altong_backend.owner.dto.response.*;
 import com.altong.altong_backend.owner.model.Owner;
 import com.altong.altong_backend.owner.repository.OwnerRepository;
+import com.altong.altong_backend.store.repository.StoreRepository;
 import com.altong.altong_backend.store.model.Store;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,6 +20,7 @@ public class OwnerAuthService {
     private final OwnerRepository ownerRepository;
     private final JwtTokenProvider jwt;
     private final PasswordEncoder passwordEncoder;
+    private final StoreRepository storeRepository;
 
     // ===================================================
     // 1. 로그인
@@ -39,7 +41,7 @@ public class OwnerAuthService {
         owner.updateRefreshToken(refresh);
         ownerRepository.save(owner);
 
-        Store store = owner.getStore(); // OneToOne 매핑으로 바로 접근 가능
+        Store store = storeRepository.findByOwner(owner).orElse(null);
 
         return OwnerLoginResponse.builder()
             .id(owner.getId())
@@ -78,7 +80,7 @@ public class OwnerAuthService {
         Owner owner = ownerRepository.findById(ownerId)
             .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
 
-        Store store = owner.getStore();
+        Store store = storeRepository.findByOwner(owner).orElse(null);
         if (store == null) {
             throw new BusinessException(ErrorCode.STORE_NOT_FOUND);
         }

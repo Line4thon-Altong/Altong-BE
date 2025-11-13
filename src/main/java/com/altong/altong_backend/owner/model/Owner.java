@@ -29,19 +29,11 @@ public class Owner {
     @Column(length = 500)
     private String refreshToken;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_id")
-    private Store store;
-
     public void updateRefreshToken(String token) {
         this.refreshToken = token;
     }
 
     public void updatePassword(String newPassword) {
         this.password = newPassword;
-    }
-
-    public void updateStore(Store store) {
-        this.store = store;
     }
 }
