@@ -21,10 +21,6 @@ public class CardnewsController {
 
     private final CardnewsService cardnewsService;
 
-    /**
-     * 카드뉴스 생성 API
-     * FastAPI 서버와 연동하여 AI 기반 4컷 만화 형태의 카드뉴스를 생성합니다.
-     */
     @PostMapping("/{trainingId}/cardnews")
     @Operation(
             summary = "카드뉴스 생성",
@@ -32,13 +28,9 @@ public class CardnewsController {
                     Training ID를 기반으로 FastAPI 서버와 연동하여 AI 카드뉴스를 생성합니다.
                     
                     - 4컷 만화 형태의 카드뉴스 생성
-                    - 각 슬라이드별로 제목, 설명, 이미지 URL 제공
-                    - tone 파라미터로 말투 커스터마이징 가능
-                    
-                    **tone 옵션:**
-                    - friendly: 친근한 말투 (기본값)
-                    - professional: 전문적인 말투
-                    - casual: 편안한 말투
+                    - 각 슬라이드별로 제목, 한 줄 설명 제공
+                    - 매뉴얼 생성 시 설정한 tone이 자동으로 적용됩니다.
+                    - 4컷 이미지 1장 생성
                     """,
             security = { @SecurityRequirement(name = "bearerAuth") }
     )
@@ -57,17 +49,10 @@ public class CardnewsController {
     )
     public ResponseEntity<ApiResponse<CardnewsResponse>> generateCardnews(
             @RequestHeader("Authorization") String token,
-            
             @Parameter(description = "교육 ID", required = true)
-            @PathVariable Long trainingId,
-            
-            @Parameter(
-                    description = "카드뉴스 말투 (friendly/professional/casual)",
-                    example = "friendly"
-            )
-            @RequestParam(defaultValue = "friendly") String tone
+            @PathVariable Long trainingId
     ) {
-        CardnewsResponse response = cardnewsService.generateCardnews(trainingId, tone);
+        CardnewsResponse response = cardnewsService.generateCardnews(trainingId);
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 }

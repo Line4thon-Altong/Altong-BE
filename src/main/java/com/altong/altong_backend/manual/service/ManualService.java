@@ -156,7 +156,7 @@ public class ManualService {
                 HttpEntity<Map<String, Object>> embedEntity = new HttpEntity<>(embedBody, embedHeaders);
 
                 // FastAPI 호출
-                restTemplate.postForEntity("http://localhost:8000/rag/embed", embedEntity, String.class);
+                restTemplate.postForEntity("http://15.165.210.249:8000/rag/embed", embedEntity, String.class);
                 log.info("[ManualService] RAG 임베딩 완료 | manualId={}", manual.getId());
             } catch (Exception e) {
                 log.error("[ManualService] RAG 임베딩 요청 실패: {}", e.getMessage());
@@ -173,7 +173,7 @@ public class ManualService {
             trainingRepository.save(training);
             // 5. 카드 뉴스 생성
             log.info("카드뉴스 생성 시작");
-            cardnewsService.generateCardnews(training.getId(), manual.getTone());
+            cardnewsService.generateCardnews(training.getId());
             log.info("카드뉴스 생성 완료");
 
             return responseBody;

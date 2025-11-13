@@ -1,18 +1,13 @@
 package com.altong.altong_backend.cardnews.service;
 
-import com.altong.altong_backend.cardnews.dto.request.CardnewsRequest;
 import com.altong.altong_backend.cardnews.dto.response.CardnewsResponse;
 import com.altong.altong_backend.cardnews.model.CardNews;
 import com.altong.altong_backend.cardnews.repository.CardnewsRepository;
 import com.altong.altong_backend.global.exception.BusinessException;
 import com.altong.altong_backend.global.exception.ErrorCode;
-import com.altong.altong_backend.global.jwt.JwtTokenProvider;
-import com.altong.altong_backend.owner.model.Owner;
-import com.altong.altong_backend.owner.repository.OwnerRepository;
-import com.altong.altong_backend.store.model.Store;
 import com.altong.altong_backend.training.model.Training;
 import com.altong.altong_backend.training.repository.TrainingRepository;
-import io.jsonwebtoken.Claims;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,21 +23,16 @@ public class CardnewsService {
 
     private final CardnewsRepository cardnewsRepository;
     private final TrainingRepository trainingRepository;
-    private final OwnerRepository ownerRepository;
     private final RestTemplate restTemplate;
-    private final JwtTokenProvider jwt;
+    private final ObjectMapper objectMapper;
 
     @Value("${ai.cardnews.api-url}")
     private String CARDNEWS_API_URL;
 
-    /**
-     * 카드뉴스 생성 (Training ID 기반)
-     */
     @Transactional
-    public CardnewsResponse generateCardnews(Long trainingId, String tone) {
-        log.info("[내부호출] 카드뉴스 생성 시작(JWT 검증 생략): trainingId={}, tone={}", trainingId, tone);
+    public CardnewsResponse generateCardnews(Long trainingId) {
+        log.info("[내부호출] 카드뉴스 생성 시작: trainingId={}", trainingId);
 
-        // Training 확인
         Training training = trainingRepository.findById(trainingId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRAINING_NOT_FOUND));
 
@@ -52,23 +42,17 @@ public class CardnewsService {
         }
 
         Long manualId = training.getManual().getId();
-
-        // FastAPI 요청
-        CardnewsRequest request = CardnewsRequest.builder()
-                .manualId(manualId)
-                .tone(tone)
-                .numSlides(4)
-                .build();
+        String url = CARDNEWS_API_URL + "?manual_id=" + manualId;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        HttpEntity<CardnewsRequest> entity = new HttpEntity<>(request, headers);
+        HttpEntity<Void> entity = new HttpEntity<>(headers);
 
         try {
-            log.debug("→ [내부호출] FastAPI 요청 전송: url={}, manualId={}", CARDNEWS_API_URL, manualId);
+            log.debug("→ FastAPI 요청: url={}, manualId={}", url, manualId);
 
             ResponseEntity<CardnewsResponse> aiResponse = restTemplate.exchange(
-                    CARDNEWS_API_URL,
+                    url,
                     HttpMethod.POST,
                     entity,
                     CardnewsResponse.class
@@ -76,25 +60,47 @@ public class CardnewsService {
 
             CardnewsResponse response = aiResponse.getBody();
 
+            // 디버깅 로그
+            log.info("🔍 FastAPI 전체 응답: {}", response);
+
             if (response == null) {
-                log.error("❌ [내부호출] FastAPI 응답이 null: trainingId={}", trainingId);
+                log.error("❌ FastAPI 응답이 null");
                 throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
             }
 
+            // imageUrl 직접 추출 및 검증
+            String imageUrl = response.getImageUrl();
+            log.info("🔍 추출된 Image URL: '{}'", imageUrl);
+            log.info("🔍 Image URL 타입: {}", imageUrl != null ? imageUrl.getClass().getName() : "null");
+
+            if (imageUrl == null || imageUrl.isEmpty()) {
+                log.error("❌ image_url이 비어있음!");
+                throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
+            }
+
+            if (!imageUrl.startsWith("http")) {
+                log.error("❌ image_url이 URL 형식이 아님: {}", imageUrl);
+                throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
+            }
 
             // DB 저장
             CardNews cardNews = CardNews.builder()
-                    .imageUrl(response.getSlides().get(0).getImageUrl())
+                    .imageUrl(imageUrl)
                     .training(training)
                     .build();
 
             cardnewsRepository.save(cardNews);
-            log.info("✅ [내부호출] 카드뉴스 DB 저장 완료: id={}, trainingId={}", cardNews.getId(), trainingId);
+
+            log.info("✅ 카드뉴스 DB 저장 완료: id={}, trainingId={}, imageUrl={}",
+                    cardNews.getId(), trainingId, cardNews.getImageUrl());
+
             return response;
 
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("❌ [내부호출] 카드뉴스 생성 실패: trainingId={}, 원인: {}", trainingId, e.getMessage());
+            log.error("❌ 카드뉴스 생성 실패: trainingId={}, 원인: {}", trainingId, e.getMessage(), e);
             throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
         }
     }
-    }
+}

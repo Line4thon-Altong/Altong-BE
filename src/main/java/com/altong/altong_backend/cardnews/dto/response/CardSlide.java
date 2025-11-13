@@ -1,19 +1,20 @@
-// CardSlide.java
 package com.altong.altong_backend.cardnews.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import java.util.List;
+import lombok.NoArgsConstructor;
 
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class CardSlide {
+    @JsonProperty("slide_id")
+    private Integer slideId;
+
     private String title;
-    
-    private List<String> content;
-    
-    @JsonProperty("image_prompt")
-    private String imagePrompt;
-    
-    @JsonProperty("image_url")
-    private String imageUrl;
+
+    private String content;
 }
