@@ -23,6 +23,7 @@ import com.altong.altong_backend.training.repository.TrainingRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -30,9 +31,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ManualService {
@@ -96,6 +100,13 @@ public class ManualService {
 
         ManualResponse responseBody = aiResponse.getBody();
 
+        log.info("FastAPI 응답 수신 | title={}, goal={}, procedureCount={}, precautionCount={}",
+                responseBody.getTitle(),
+                responseBody.getGoal(),
+                responseBody.getProcedure() != null ? responseBody.getProcedure().size() : 0,
+                responseBody.getPrecaution() != null ? responseBody.getPrecaution().size() : 0
+        );
+
         if (responseBody == null) {
             throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
         }
@@ -110,6 +121,8 @@ public class ManualService {
                     .build();
 
             trainingRepository.save(training);
+            log.info("Training 생성 완료 | trainingId={}", training.getId());
+
 
             // 3. Manual 생성 후 training과 연결
             Manual manual = Manual.builder()
@@ -122,21 +135,52 @@ public class ManualService {
                     .tone(request.getTone())
                     .createdAt(LocalDateTime.now())
                     .build();
-
+            log.info("메뉴얼 저장 직전 데이터 확인");
+            log.info("goal={}", manual.getGoal());
+            log.info("procedure={}", objectMapper.writeValueAsString(manual.getProcedure()));
+            log.info("⚠precaution={}", manual.getPrecaution());
             manualRepository.save(manual);
+            log.info("[ManualService] 메뉴얼 저장 성공 | manualId={}, title={}", manual.getId(), manual.getTitle());
+
+            // 메뉴얼 임베딩
+            try {
+                log.info("[ManualService] FastAPI RAG 임베딩 요청 시작 | manualId={}", manual.getId());
+
+                // FastAPI에 전송할 Body 구성
+                Map<String, Object> embedBody = new HashMap<>();
+                embedBody.put("manual_id", manual.getId());
+                embedBody.put("manual_json", responseBody); // AI가 생성한 메뉴얼 JSON 그대로 전송
+
+                HttpHeaders embedHeaders = new HttpHeaders();
+                embedHeaders.setContentType(MediaType.APPLICATION_JSON);
+                HttpEntity<Map<String, Object>> embedEntity = new HttpEntity<>(embedBody, embedHeaders);
+
+                // FastAPI 호출
+                restTemplate.postForEntity("http://localhost:8000/rag/embed", embedEntity, String.class);
+                log.info("[ManualService] RAG 임베딩 완료 | manualId={}", manual.getId());
+            } catch (Exception e) {
+                log.error("[ManualService] RAG 임베딩 요청 실패: {}", e.getMessage());
+                // 그래도 퀴즈 생성은 계속 진행하도록 함 (임베딩 없으면 fallback으로 동작)
+            }
 
             // 4. 퀴즈 생성
+            log.info("퀴즈 생성 시작");
             QuizResponse quizResponse = quizService.generateQuiz(training.getId(), manual.getTone());
+            log.info("퀴즈 생성 완료 | quizCount={}", quizResponse.getQuizzes() != null ? quizResponse.getQuizzes().size() : 0);
 
 
             training.setManual(manual);
             trainingRepository.save(training);
             // 5. 카드 뉴스 생성
+            log.info("카드뉴스 생성 시작");
             cardnewsService.generateCardnews(training.getId(), manual.getTone());
+            log.info("카드뉴스 생성 완료");
 
             return responseBody;
 
         } catch (Exception e) {
+            log.error("퀴즈 또는 카드뉴스 생성 중 오류 발생: {}", e.getMessage());
+            log.error("StackTrace:", e);
             throw new BusinessException(ErrorCode.DATABASE_ERROR);
         }
     }

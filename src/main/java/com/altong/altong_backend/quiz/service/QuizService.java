@@ -16,6 +16,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class QuizService {
@@ -44,38 +46,53 @@ public class QuizService {
 
     // 퀴즈 생성
     public QuizResponse generateQuiz(Long trainingId, String tone) {
+        log.info("🎯 [QuizService] FastAPI 퀴즈 생성 요청 시작 | trainingId={}, tone={}", trainingId, tone);
+
         try {
-            // FastAPI 요청 바디
+            // 1. 요청 바디 구성
             Map<String, Object> body = new HashMap<>();
             body.put("manual_id", trainingId);
             body.put("tone", tone);
+            body.put("focus", "procedure");
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
-            // FastAPI 호출
+            log.info("[QuizService] 요청 본문: {}", objectMapper.writeValueAsString(body));
+            log.info("[QuizService] 요청 URL: {}", QUIZ_API_URL);
+
+            // 2. FastAPI 호출
             ResponseEntity<String> response = restTemplate.postForEntity(QUIZ_API_URL, entity, String.class);
+            log.info("[QuizService] FastAPI 응답 코드: {}", response.getStatusCode());
+            log.debug("[QuizService] FastAPI 원문 응답: {}", response.getBody());
 
             if (response.getStatusCode() != HttpStatus.OK) {
+                log.error("[QuizService] AI 서버 응답 실패: {}", response.getStatusCode());
                 throw new RuntimeException("AI 서버 응답 실패: " + response.getStatusCode());
             }
 
+            // 3. 응답 JSON → DTO 변환
             QuizResponse quizResponse = objectMapper.readValue(response.getBody(), QuizResponse.class);
+            log.info("[QuizService] 응답 파싱 완료 | quizCount={}",
+                    quizResponse.getQuizzes() != null ? quizResponse.getQuizzes().size() : 0);
 
-            // DB 저장
+            // 4. Training 조회
             Training training = trainingRepository.findById(trainingId)
                     .orElseThrow(() -> new RuntimeException("해당 training이 존재하지 않습니다."));
+            log.info("[QuizService] Training 조회 완료 | trainingId={}", training.getId());
 
-            quizResponse.getQuizzes().forEach(q -> {
+            // 5. 퀴즈 저장
+            for (int i = 0; i < quizResponse.getQuizzes().size(); i++) {
+                var q = quizResponse.getQuizzes().get(i);
                 try {
+                    String optionsJson = objectMapper.writeValueAsString(q.getOptions());
                     Quiz quiz = Quiz.builder()
                             .type(q.getType().equalsIgnoreCase("OX")
                                     ? com.altong.altong_backend.quiz.model.QuizType.OX
                                     : com.altong.altong_backend.quiz.model.QuizType.MULTIPLE)
                             .question(q.getQuestion())
-                            .options(objectMapper.writeValueAsString(q.getOptions()))
+                            .options(optionsJson)
                             .answer(q.getAnswer())
                             .explanation(q.getExplanation())
                             .createdAt(LocalDateTime.now())
@@ -83,14 +100,22 @@ public class QuizService {
                             .build();
 
                     quizRepository.save(quiz);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException("퀴즈 옵션 직렬화 실패: " + e.getMessage(), e);
-                }
-            });
+                    log.info("[QuizService] 퀴즈 {} 저장 완료 | question='{}'", i + 1, q.getQuestion());
 
+                } catch (JsonProcessingException e) {
+                    log.error("[QuizService] 퀴즈 옵션 직렬화 실패: {}", e.getMessage(), e);
+                    throw new RuntimeException("퀴즈 옵션 직렬화 실패: " + e.getMessage(), e);
+                } catch (Exception e) {
+                    log.error("[QuizService] 퀴즈 저장 실패 (index={}): {}", i, e.getMessage(), e);
+                    throw new RuntimeException("퀴즈 저장 실패: " + e.getMessage(), e);
+                }
+            }
+
+            log.info("[QuizService] 퀴즈 전체 저장 완료 | trainingId={}", trainingId);
             return quizResponse;
 
         } catch (Exception e) {
+            log.error("[QuizService] FastAPI 퀴즈 생성 중 예외 발생: {}", e.getMessage(), e);
             throw new RuntimeException("퀴즈 생성 또는 저장 실패: " + e.getMessage(), e);
         }
     }
