@@ -4,12 +4,14 @@ import com.altong.altong_backend.global.response.ApiResponse;
 import com.altong.altong_backend.owner.service.OwnerAuthService;
 import com.altong.altong_backend.owner.dto.request.*;
 import com.altong.altong_backend.owner.dto.response.*;
+import com.altong.altong_backend.global.jwt.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class OwnerAuthController {
 
     private final OwnerAuthService service;
+    private final JwtTokenProvider jwt;
 
     // ===============================
     // 1️. 로그인
@@ -102,52 +105,58 @@ public class OwnerAuthController {
     @Operation(
         summary = "비밀번호 변경",
         description = """
-        ### 개요  
+        ### 개요
         - 사장이 자신의 비밀번호를 변경합니다.
-        
-        ### 제약조건  
-        - 헤더: `X-OWNER-ID` 필수
+        - **JWT Access Token**으로 로그인 사용자를 식별합니다.
+
+        ### 제약조건
+        - 헤더: `Authorization: Bearer {accessToken}` 필수
         - Body: `oldPassword`, `newPassword` 필수
-        
-        ### 예외상황  
+
+        ### 예외상황
         | 코드 | 상태 | 설명 |
         |------|------|------|
         | `A004` | 401 | 기존 비밀번호 불일치 |
         | `A003` | 404 | 사용자 없음 |
-        | `G001` | 400 | 필수값 누락 |
-        
-        ### 테스트 방법  
-        - Swagger / Postman 모두 가능  
+        | `G001` | 400 | 잘못된 요청 |
+
+        ### 테스트 방법
+        1) `/api/owners/login`으로 AccessToken 발급  
+        2) Swagger 상단 **Authorize** → `Bearer eyJ...` 입력  
+        3) 아래 JSON 전송
         ```json
-        {
-          "oldPassword": "abcd1234!",
-          "newPassword": "newPass!123"
-        }
+        { "oldPassword": "abcd1234!", "newPassword": "newPass!123" }
         ```
-        헤더에 `X-OWNER-ID: 1` 추가 후 요청
         """
     )
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
             description = "비밀번호 변경 성공",
-            content = @Content(examples = @ExampleObject(value = """
-                { "code": "SUCCESS", "message": "비밀번호가 성공적으로 변경되었습니다.", "data": null }
-                """))
+            content = @Content(examples = @ExampleObject(
+                value = "{ \"code\":\"SUCCESS\",\"message\":\"비밀번호가 성공적으로 변경되었습니다.\",\"data\":null }"
+            ))
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "401",
             description = "비밀번호 불일치",
-            content = @Content(examples = @ExampleObject(value = """
-                { "code": "A004", "message": "기존 비밀번호가 일치하지 않습니다.", "data": null }
-                """))
+            content = @Content(examples = @ExampleObject(
+                value = "{ \"code\":\"A004\",\"message\":\"기존 비밀번호가 일치하지 않습니다.\",\"data\":null }"
+            ))
         )
     })
     @PatchMapping("/password")
     public ApiResponse<OwnerPasswordUpdateResponse> updatePassword(
-        @RequestHeader("X-OWNER-ID") Long ownerId,
+        HttpServletRequest request,
         @RequestBody @Valid OwnerPasswordUpdateRequest req
     ) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("유효하지 않은 Authorization 헤더입니다.");
+        }
+        String token = authHeader.substring(7);
+        Long ownerId = jwt.getOwnerIdFromToken(token);
+
         return ApiResponse.success(service.updatePassword(ownerId, req));
     }
 
@@ -157,47 +166,51 @@ public class OwnerAuthController {
     @Operation(
         summary = "상호명 변경",
         description = """
-        ### 개요  
+        ### 개요
         - 사장이 등록된 가게의 상호명을 변경합니다.
-        
-        ### 제약조건  
-        - 헤더: `X-OWNER-ID` 필수
+        - **JWT Access Token**으로 로그인 사용자를 식별합니다.
+
+        ### 제약조건
+        - 헤더: `Authorization: Bearer {accessToken}` 필수
         - Body: `storeName` 필수 (공백 불가, 최대 50자)
-        
-        ### 예외상황  
-        | 코드 | 상태 | 설명 |
-        |------|------|------|
-        | `A003` | 404 | 사용자 없음 |
-        | `G001` | 400 | 잘못된 입력 |
-        
-        ### 테스트 방법  
+
+        ### 테스트 방법
+        1) `/api/owners/login`으로 AccessToken 발급  
+        2) Swagger 상단 **Authorize** → `Bearer eyJ...` 입력  
+        3) 아래 JSON 전송
         ```json
         { "storeName": "알통치킨 송탄점" }
         ```
-        헤더에 `X-OWNER-ID: 1` 추가 후 요청
         """
     )
     @ApiResponses({
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "200",
             description = "상호명 변경 성공",
-            content = @Content(examples = @ExampleObject(value = """
-                { "code": "SUCCESS", "message": "상호명이 변경되었습니다.", "data": null }
-                """))
+            content = @Content(examples = @ExampleObject(
+                value = "{ \"code\":\"SUCCESS\",\"message\":\"상호명이 변경되었습니다.\",\"data\":null }"
+            ))
         ),
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
             responseCode = "400",
             description = "입력 오류",
-            content = @Content(examples = @ExampleObject(value = """
-                { "code": "G001", "message": "유효하지 않은 상호명입니다.", "data": null }
-                """))
+            content = @Content(examples = @ExampleObject(
+                value = "{ \"code\":\"G001\",\"message\":\"유효하지 않은 상호명입니다.\",\"data\":null }"
+            ))
         )
     })
     @PatchMapping("/store-name")
     public ApiResponse<OwnerPasswordUpdateResponse> updateStoreName(
-        @RequestHeader("X-OWNER-ID") Long ownerId,
+        HttpServletRequest request,
         @RequestBody @Valid OwnerStoreNameUpdateRequest req
     ) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("유효하지 않은 Authorization 헤더입니다.");
+        }
+        String token = authHeader.substring(7);
+        Long ownerId = jwt.getOwnerIdFromToken(token);
+
         return ApiResponse.success(service.updateStoreName(ownerId, req));
     }
 

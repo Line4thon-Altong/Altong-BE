@@ -35,6 +35,8 @@ public enum ErrorCode {
     SCHEDULE_NOT_FOUND_TODAY(HttpStatus.NOT_FOUND, "SC003", "오늘 근무 예정이 없습니다."),
     ALREADY_CHECKED_IN(HttpStatus.BAD_REQUEST, "SC004", "이미 출근 처리되었습니다."),
     ALREADY_CHECKED_OUT(HttpStatus.BAD_REQUEST,"SC005","이미 퇴근 처리되었습니다."),
+    INVALID_DATE_RANGE(HttpStatus.BAD_REQUEST, "SC006", "month만 단독으로 입력할 수 없습니다. year를 함께 입력해주세요."),
+
 
     // 메뉴얼
     DATABASE_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "T001","DB 저장 중 오류가 발생했습니다."),
