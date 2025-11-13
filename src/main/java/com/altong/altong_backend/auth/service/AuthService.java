@@ -45,6 +45,7 @@ public class AuthService {
         if (ownerRepo.existsByUsername(req.getUsername()))
             throw new BusinessException(ErrorCode.DUPLICATE_USERNAME);
 
+        // 1) Owner 저장
         Owner owner = Owner.builder()
             .username(req.getUsername())
             .password(encoder.encode(req.getPassword()))
@@ -52,11 +53,16 @@ public class AuthService {
             .build();
         owner = ownerRepo.save(owner);
 
+        // 2) Store 생성
         Store store = Store.builder()
             .name(req.getStoreName())
-            .owner(owner)
+            .owner(owner)   // Store → Owner 참조
             .build();
         store = storeRepo.save(store);
+
+        // 3) Owner.store 연결 (너네 지금 이 코드 없음!)
+        owner.updateStore(store);
+        ownerRepo.save(owner);
 
         return SignupResponse.builder()
             .id(owner.getId())
@@ -67,6 +73,7 @@ public class AuthService {
             .createdAt(owner.getCreatedAt())
             .build();
     }
+
 
     private SignupResponse signupEmployee(SignupRequest req) {
         if (empRepo.existsByUsername(req.getUsername()))
