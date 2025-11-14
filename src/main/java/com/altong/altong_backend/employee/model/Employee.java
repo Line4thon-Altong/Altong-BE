@@ -1,6 +1,6 @@
 package com.altong.altong_backend.employee.model;
 
-import com.altong.altong_backend.schedule.entity.Schedule;
+import com.altong.altong_backend.schedule.model.Schedule;
 import com.altong.altong_backend.store.model.Store;
 import jakarta.persistence.*;
 import lombok.*;

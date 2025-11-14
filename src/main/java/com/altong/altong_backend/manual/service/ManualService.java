@@ -57,10 +57,9 @@ public class ManualService {
     @Value("${ai.quiz.api-url}")
     private String QUIZ_API_URL;
 
-    // 메뉴얼 생성 + 퀴즈 자동 생성 + 카드뉴스 자동 생성
-    @Transactional
     public ManualResponse generateManual(String token, ManualRequest request) {
-        // JWT 파싱
+
+        // 0. JWT 검증
         String accessToken = token.replace("Bearer ", "");
         Claims claims;
         try {
@@ -69,119 +68,143 @@ public class ManualService {
             throw new BusinessException(ErrorCode.INVALID_TOKEN);
         }
 
-        String subject = claims.getSubject();
-        if (!subject.startsWith("OWNER:")) {
+        if (!claims.getSubject().startsWith("OWNER:")) {
             throw new BusinessException(ErrorCode.UNAUTHORIZED_ROLE);
         }
-        Long ownerId = Long.parseLong(subject.substring(6));
+        Long ownerId = Long.parseLong(claims.getSubject().substring(6));
 
-        // 사장님 찾기
         Owner owner = ownerRepository.findById(ownerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
 
-        // 사장님의 가게 찾기
         Store store = storeRepository.findByOwner(owner)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STORE_NOT_FOUND));
 
-        // FastAPI로 요청 보내기
-        // 1. 메뉴얼 생성 요청
+
+        // 1. FastAPI 메뉴얼 생성 호출
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-
         HttpEntity<ManualRequest> entity = new HttpEntity<>(request, headers);
 
-        ResponseEntity<ManualResponse> aiResponse =
-                restTemplate.exchange(
-                        MANUAL_API_URL,
-                        HttpMethod.POST,
-                        entity,
-                        ManualResponse.class
-                );
-
-        ManualResponse responseBody = aiResponse.getBody();
-
-        log.info("FastAPI 응답 수신 | title={}, goal={}, procedureCount={}, precautionCount={}",
-                responseBody.getTitle(),
-                responseBody.getGoal(),
-                responseBody.getProcedure() != null ? responseBody.getProcedure().size() : 0,
-                responseBody.getPrecaution() != null ? responseBody.getPrecaution().size() : 0
+        ResponseEntity<ManualResponse> aiResponse = restTemplate.exchange(
+                MANUAL_API_URL,
+                HttpMethod.POST,
+                entity,
+                ManualResponse.class
         );
 
-        if (responseBody == null) {
+        ManualResponse responseBody = aiResponse.getBody();
+        if (responseBody == null)
             throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
-        }
 
-        // Training & Manual 저장
+        log.info("FastAPI 메뉴얼 생성 완료");
+
+
+        // 2. Training + Manual 저장 (트랜잭션 분리 → 커밋 보장)
+        Manual savedManual = saveTrainingAndManual(owner, store, responseBody, request);
+
+        Long trainingId = savedManual.getTraining().getId();
+        Long manualId = savedManual.getId();
+
+
+        // ---------------------------------------------------------
+        // 트랜잭션 밖 — 실패해도 절대 롤백되면 안 되는 영역
+        // ---------------------------------------------------------
+
+        // 3. RAG 임베딩
         try {
-            // 2. Training 먼저 생성
-            Training training = Training.builder()
-                    .title(responseBody.getTitle())
-                    .createdAt(LocalDateTime.now())
-                    .store(store)
-                    .build();
+            log.info("[ManualService] RAG 임베딩 요청 시작 | manualId={}", manualId);
 
-            trainingRepository.save(training);
-            log.info("Training 생성 완료 | trainingId={}", training.getId());
+            Map<String, Object> embedBody = new HashMap<>();
+            embedBody.put("manual_id", manualId);
+            embedBody.put("manual_json", responseBody);
 
+            HttpHeaders embedHeaders = new HttpHeaders();
+            embedHeaders.setContentType(MediaType.APPLICATION_JSON);
 
-            // 3. Manual 생성 후 training과 연결
-            Manual manual = Manual.builder()
-                    .title(responseBody.getTitle())
-                    .goal(responseBody.getGoal())
-                    .procedure(responseBody.getProcedure())
-                    .precaution(responseBody.getPrecaution())
-                    .aiRawResponse(objectMapper.writeValueAsString(responseBody))
-                    .training(training)
-                    .tone(request.getTone())
-                    .createdAt(LocalDateTime.now())
-                    .build();
-            log.info("메뉴얼 저장 직전 데이터 확인");
-            log.info("goal={}", manual.getGoal());
-            log.info("procedure={}", objectMapper.writeValueAsString(manual.getProcedure()));
-            log.info("⚠precaution={}", manual.getPrecaution());
-            manualRepository.save(manual);
-            log.info("[ManualService] 메뉴얼 저장 성공 | manualId={}, title={}", manual.getId(), manual.getTitle());
-
-            // 메뉴얼 임베딩
-            try {
-                log.info("[ManualService] FastAPI RAG 임베딩 요청 시작 | manualId={}", manual.getId());
-
-                // FastAPI에 전송할 Body 구성
-                Map<String, Object> embedBody = new HashMap<>();
-                embedBody.put("manual_id", manual.getId());
-                embedBody.put("manual_json", responseBody); // AI가 생성한 메뉴얼 JSON 그대로 전송
-
-                HttpHeaders embedHeaders = new HttpHeaders();
-                embedHeaders.setContentType(MediaType.APPLICATION_JSON);
-                HttpEntity<Map<String, Object>> embedEntity = new HttpEntity<>(embedBody, embedHeaders);
-
-                // FastAPI 호출
-                restTemplate.postForEntity("http://15.165.210.249:8000/rag/embed", embedEntity, String.class);
-                log.info("[ManualService] RAG 임베딩 완료 | manualId={}", manual.getId());
-            } catch (Exception e) {
-                log.error("[ManualService] RAG 임베딩 요청 실패: {}", e.getMessage());
-                // 그래도 퀴즈 생성은 계속 진행하도록 함 (임베딩 없으면 fallback으로 동작)
-            }
-
-            // 4. 퀴즈 생성
-            log.info("퀴즈 생성 시작");
-            QuizResponse quizResponse = quizService.generateQuiz(training.getId(), manual.getTone());
-            log.info("퀴즈 생성 완료 | quizCount={}", quizResponse.getQuizzes() != null ? quizResponse.getQuizzes().size() : 0);
-
-
-            training.setManual(manual);
-            trainingRepository.save(training);
-            // 5. 카드 뉴스 생성
-            log.info("카드뉴스 생성 시작");
-            cardnewsService.generateCardnews(training.getId());
-            log.info("카드뉴스 생성 완료");
-
-            return responseBody;
+            restTemplate.postForEntity(
+                    "http://15.165.210.249:8000/rag/embed",
+                    new HttpEntity<>(embedBody, embedHeaders),
+                    String.class
+            );
+            log.info("[ManualService] RAG 임베딩 완료");
 
         } catch (Exception e) {
-            log.error("퀴즈 또는 카드뉴스 생성 중 오류 발생: {}", e.getMessage());
-            log.error("StackTrace:", e);
-            throw new BusinessException(ErrorCode.DATABASE_ERROR);
+            log.error("RAG 임베딩 실패 (무시하고 계속 진행): {}", e.getMessage());
+        }
+
+
+        // 4. 퀴즈 생성
+        try {
+            log.info("퀴즈 생성 시작");
+            quizService.generateQuiz(trainingId, savedManual.getTone());
+            log.info("퀴즈 생성 완료");
+        } catch (Exception e) {
+            log.error("퀴즈 생성 실패 (계속 진행): {}", e.getMessage());
+        }
+
+
+        // 5. 카드뉴스 생성
+        try {
+            log.info("카드뉴스 생성 시작");
+            cardnewsService.generateCardnews(trainingId);
+            log.info("카드뉴스 생성 완료");
+        } catch (Exception e) {
+            log.error("카드뉴스 생성 실패 (계속 진행): {}", e.getMessage());
+        }
+
+        // ---------------------------------------------------------
+
+        return responseBody;
+    }
+
+
+    /**
+     * Training + Manual 저장만 트랜잭션으로 묶어서 즉시 커밋
+     * 나머지 AI 호출은 이 트랜잭션 밖에서 진행한다.
+     */
+    @Transactional
+    public Manual saveTrainingAndManual(
+            Owner owner,
+            Store store,
+            ManualResponse responseBody,
+            ManualRequest request
+    ) {
+
+        // Training 저장
+        Training training = Training.builder()
+                .title(responseBody.getTitle())
+                .createdAt(LocalDateTime.now())
+                .store(store)
+                .build();
+        trainingRepository.save(training);
+
+        // Manual 저장
+        Manual manual = Manual.builder()
+                .title(responseBody.getTitle())
+                .goal(responseBody.getGoal())
+                .procedure(responseBody.getProcedure())
+                .precaution(responseBody.getPrecaution())
+                .aiRawResponse(toJsonSafe(responseBody))
+                .training(training)
+                .tone(request.getTone())
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        manualRepository.save(manual);
+
+        training.setManual(manual);
+        trainingRepository.save(training);
+
+        return manual;
+    }
+
+    // Jackson JSON 변환 안전 처리
+    private String toJsonSafe(Object obj) {
+        try {
+            return objectMapper.writeValueAsString(obj);
+        } catch (Exception e) {
+            log.error("JSON 변환 실패: {}", e.getMessage());
+            return "{}";
         }
     }
 

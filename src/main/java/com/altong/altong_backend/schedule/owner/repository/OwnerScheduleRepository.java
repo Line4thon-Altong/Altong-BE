@@ -1,6 +1,6 @@
 package com.altong.altong_backend.schedule.owner.repository;
 
-import com.altong.altong_backend.schedule.entity.Schedule;
+import com.altong.altong_backend.schedule.model.Schedule;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
