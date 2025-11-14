@@ -1,0 +1,28 @@
+package com.altong.altong_backend.schedule.employee.dto.response;
+
+import com.altong.altong_backend.schedule.model.Schedule;
+import io.swagger.v3.oas.annotations.media.Schema;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+@Schema(name="CheckOutResponse",description="퇴근 처리 응답")
+public record CheckOutResponse (@Schema(description = "스케줄 ID", example = "1") Long scheduleId,
+                                @Schema(description = "직원 ID", example = "1") Long employeeId,
+                                @Schema(description = "직원 이름", example = "조효동") String employeeName,
+                                @Schema(description = "근무 날짜", example = "2025-11-05") LocalDate workDate,
+                                @Schema(description = "퇴근 시각", example = "13:00:00") LocalTime endTime,
+                                @Schema(description = "근무 상태", example = "WORKING") String workStatus){
+
+    public static CheckOutResponse from(Schedule schedule){
+        return new CheckOutResponse(
+                schedule.getId(),
+                schedule.getEmployee() != null ? schedule.getEmployee().getId() : null,
+                schedule.getEmployee() != null ? schedule.getEmployee().getName() : null,
+                schedule.getWorkDate(),
+                schedule.getEndTime(),
+                schedule.getWorkStatus() != null ? schedule.getWorkStatus().name() : null
+        );
+
+    }
+}

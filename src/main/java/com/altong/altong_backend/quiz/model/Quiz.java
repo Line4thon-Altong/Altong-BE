@@ -3,6 +3,7 @@ package com.altong.altong_backend.quiz.model;
 import com.altong.altong_backend.training.model.Training;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -25,7 +26,7 @@ public class Quiz {
     @Column(nullable = false)
     private QuizType type;
 
-    @Column(columnDefinition = "JSON")
+    @Column(columnDefinition = "TEXT")
     private String options;
 
     @Column(length = 255, nullable = false)
@@ -34,11 +35,9 @@ public class Quiz {
     @Column(columnDefinition = "TEXT")
     private String explanation;
 
+    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
-
-    @Column(name = "is_completed", nullable = false)
-    private Boolean isCompleted = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "training_id", nullable = false)
