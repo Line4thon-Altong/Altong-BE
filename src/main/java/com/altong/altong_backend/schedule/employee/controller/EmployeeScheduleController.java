@@ -103,6 +103,7 @@ public class EmployeeScheduleController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    // HTTP 요청 헤더에서 JWT 토큰 추출
     private String resolveToken(String authorizationHeader) {
         if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
             throw new BusinessException(ErrorCode.INVALID_TOKEN);

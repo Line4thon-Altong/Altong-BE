@@ -142,6 +142,9 @@ public class ManualService {
             manualRepository.save(manual);
             log.info("[ManualService] 메뉴얼 저장 성공 | manualId={}, title={}", manual.getId(), manual.getTitle());
 
+            manualRepository.flush();
+            log.info("[ManualService] 메뉴얼 DB 커밋 완료 | manualId={}, title={}", manual.getId(), manual.getTitle());
+
             // 메뉴얼 임베딩
             try {
                 log.info("[ManualService] FastAPI RAG 임베딩 요청 시작 | manualId={}", manual.getId());
