@@ -6,13 +6,6 @@
 </br> 기간 : 25. 10. 10 ~ 25. 11. 15
 </br>
 
-## 🔥 𝗣𝗿𝗼𝗷𝗲𝗰𝘁 𝗢𝘃𝗲𝗿𝘃𝗶𝗲𝘄
-### 알바생 교육부터 알바생 관리까지, AI 기반 알바 통합 플랫폼 Altong  💪🏻
-<img width="1920" height="1080" alt="2" src="https://github.com/user-attachments/assets/e2a52483-a9bd-471a-ac97-985fd47ed84a" />
-
-
-</br>
-
 ### 𝗣𝗿𝗼𝗷𝗲𝗰𝘁 𝗦𝗰𝗵𝗲𝗱𝘂𝗹𝗲
 
 |    🚩단계           | ⌛기간                 |
@@ -23,6 +16,15 @@
 | 최종발표회      | 2025. 11. 15              |
 
 </br>
+
+## 🔥 𝗣𝗿𝗼𝗷𝗲𝗰𝘁 𝗢𝘃𝗲𝗿𝘃𝗶𝗲𝘄
+### 알바생 교육부터 알바생 관리까지, AI 기반 알바 통합 플랫폼 Altong  💪🏻
+<img width="1920" height="1080" alt="2" src="https://github.com/user-attachments/assets/e2a52483-a9bd-471a-ac97-985fd47ed84a" />
+
+
+</br>
+
+
 
 ### 𝗣𝗿𝗼𝗷𝗲𝗰𝘁 𝗺𝗼𝘁𝗶𝘃𝗮𝘁𝗶𝗼𝗻
 
