@@ -1,20 +1,19 @@
 package com.altong.altong_backend.global.exception;
 
 import com.altong.altong_backend.global.response.ApiResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.RestController;
-import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @RestControllerAdvice(
         annotations = {RestController.class},
         basePackages = {
-                "com.altong.altong_backend.user.controller",
-                "com.altong.altong_backend.auth.controller",
-                "com.altong.altong_backend.quiz.controller"
+                // 프로젝트 전체 컨트롤러를 다 예외 처리 대상으로
+                "com.altong.altong_backend"
         }
 )
 public class GlobalExceptionHandler {

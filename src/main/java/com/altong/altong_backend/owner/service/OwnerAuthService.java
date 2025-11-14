@@ -28,7 +28,7 @@ public class OwnerAuthService {
     public OwnerLoginResponse login(OwnerLoginRequest req) {
 
         Owner owner = ownerRepository.findByUsername(req.getUsername())
-            .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_USER));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND_USER));
 
         if (!passwordEncoder.matches(req.getPassword(), owner.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
@@ -43,15 +43,19 @@ public class OwnerAuthService {
 
         Store store = storeRepository.findByOwner(owner).orElse(null);
 
+        // displayName: 기본적으로 가게명, 가게 없으면 username 사용
+        String displayName = (store != null) ? store.getName() : owner.getUsername();
+
         return OwnerLoginResponse.builder()
-            .id(owner.getId())
-            .username(owner.getUsername())
-            .storeId(store != null ? store.getId() : null)
-            .storeName(store != null ? store.getName() : null)
-            .role("OWNER")
-            .accessToken(access)
-            .refreshToken(refresh)
-            .build();
+                .id(owner.getId())
+                .username(owner.getUsername())
+                .displayName(displayName)
+                .storeId(store != null ? store.getId() : null)
+                .storeName(store != null ? store.getName() : null)
+                .role("OWNER")
+                .accessToken(access)
+                .refreshToken(refresh)
+                .build();
     }
 
     // ===================================================
@@ -60,7 +64,7 @@ public class OwnerAuthService {
     public OwnerPasswordUpdateResponse updatePassword(Long ownerId, OwnerPasswordUpdateRequest req) {
 
         Owner owner = ownerRepository.findById(ownerId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
 
         if (!passwordEncoder.matches(req.getOldPassword(), owner.getPassword())) {
             throw new BusinessException(ErrorCode.INVALID_CREDENTIALS);
@@ -78,7 +82,7 @@ public class OwnerAuthService {
     public OwnerStoreNameUpdateResponse updateStoreName(Long ownerId, OwnerStoreNameUpdateRequest req) {
 
         Owner owner = ownerRepository.findById(ownerId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
 
         Store store = storeRepository.findByOwner(owner).orElse(null);
         if (store == null) {
@@ -117,7 +121,7 @@ public class OwnerAuthService {
         Long ownerId = Long.parseLong(subject.substring("OWNER:".length()));
 
         Owner owner = ownerRepository.findById(ownerId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
+                .orElseThrow(() -> new BusinessException(ErrorCode.OWNER_NOT_FOUND));
 
         owner.updateRefreshToken(null);
         ownerRepository.save(owner);

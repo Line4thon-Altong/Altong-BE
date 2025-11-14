@@ -48,6 +48,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/owners/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/employees/login").permitAll()
+                        // 로그아웃은 AccessToken 없이도 동작해야 하므로 permitAll
+                        .requestMatchers(HttpMethod.POST, "/api/owners/logout").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/employees/logout").permitAll()
 
                         // 루트 페이지 접근 허용
                         .requestMatchers("/", "/error", "/favicon.ico").permitAll()
@@ -56,6 +59,7 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtAuthFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 

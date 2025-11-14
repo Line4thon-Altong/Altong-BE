@@ -17,26 +17,37 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider provider;
 
-    public JwtAuthFilter(JwtTokenProvider provider){ this.provider=provider; }
+    public JwtAuthFilter(JwtTokenProvider provider) {
+        this.provider = provider;
+    }
 
     @Override
-    protected void doFilterInternal(HttpServletRequest req, HttpServletResponse res, FilterChain chain)
-            throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest req,
+            HttpServletResponse res,
+            FilterChain chain
+    ) throws ServletException, IOException {
+
         String auth = req.getHeader("Authorization");
+
         if (StringUtils.hasText(auth) && auth.startsWith("Bearer ")) {
             String token = auth.substring(7);
             try {
                 // 토큰 검증 + 인증 객체 생성 + 시큐리티 컨텍스트 등록
                 Authentication authentication = provider.getAuthentication(token);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (JwtException e) {
-                res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                return;
+            } catch (ExpiredJwtException e) {
+                // 만료된 토큰이면 인증 정보만 비우고, 요청은 그대로 진행
+                SecurityContextHolder.clearContext();
+            } catch (JwtException | IllegalArgumentException e) {
+                // 위조 / 파싱 실패 등도 마찬가지로 인증만 비우고 진행
+                SecurityContextHolder.clearContext();
             } catch (Exception e) {
-                res.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                return;
+                SecurityContextHolder.clearContext();
             }
         }
-        chain.doFilter(req,res);
+
+        // 필터 체인 계속 진행 (에러가 있어도 컨트롤러까지 도달하도록)
+        chain.doFilter(req, res);
     }
 }
