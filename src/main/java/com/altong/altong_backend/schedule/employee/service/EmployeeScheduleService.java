@@ -35,7 +35,7 @@ public class EmployeeScheduleService {
         Schedule schedule = employeeScheduleRepository.findByEmployee_IdAndWorkDate(employeeId, today)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND_TODAY));
 
-        // 이미 출근 처리되었는지 확인
+        // 이미 출근 처리 되었는지 확인
         if (schedule.getStartTime() != null) {
             throw new BusinessException(ErrorCode.ALREADY_CHECKED_IN);
         }
@@ -63,6 +63,7 @@ public class EmployeeScheduleService {
         Schedule schedule = employeeScheduleRepository.findByEmployee_IdAndWorkDate(employeeId, today)
                 .orElseThrow(() -> new BusinessException(ErrorCode.SCHEDULE_NOT_FOUND_TODAY));
 
+        // 이미 퇴근 처리 되었는지 확인
         if ((schedule.getEndTime() != null)) {
             throw new BusinessException(ErrorCode.ALREADY_CHECKED_OUT);
         }

@@ -11,7 +11,7 @@ public record CheckOutResponse (@Schema(description = "스케줄 ID", example = 
                                 @Schema(description = "직원 ID", example = "1") Long employeeId,
                                 @Schema(description = "직원 이름", example = "조효동") String employeeName,
                                 @Schema(description = "근무 날짜", example = "2025-11-05") LocalDate workDate,
-                                @Schema(description = "출근 시각", example = "13:00:00") LocalTime startTime,
+                                @Schema(description = "퇴근 시각", example = "13:00:00") LocalTime endTime,
                                 @Schema(description = "근무 상태", example = "WORKING") String workStatus){
 
     public static CheckOutResponse from(Schedule schedule){
@@ -20,7 +20,7 @@ public record CheckOutResponse (@Schema(description = "스케줄 ID", example = 
                 schedule.getEmployee() != null ? schedule.getEmployee().getId() : null,
                 schedule.getEmployee() != null ? schedule.getEmployee().getName() : null,
                 schedule.getWorkDate(),
-                schedule.getStartTime(),
+                schedule.getEndTime(),
                 schedule.getWorkStatus() != null ? schedule.getWorkStatus().name() : null
         );
 
