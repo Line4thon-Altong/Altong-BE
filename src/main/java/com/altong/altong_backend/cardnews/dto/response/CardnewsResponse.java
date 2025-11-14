@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.List;
 
 @Data
 @Builder
@@ -13,9 +12,6 @@ import java.util.List;
 @AllArgsConstructor
 public class CardnewsResponse {
     private String title;
-
-    private List<CardSlide> slides;
-
     @JsonProperty("image_url")
     private String imageUrl;
 
