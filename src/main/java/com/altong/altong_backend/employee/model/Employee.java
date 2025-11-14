@@ -56,4 +56,9 @@ public class Employee {
     public void updateStore(Store store) {
         this.store = store;
     }
+
+    @PrePersist
+    public void prePersist() {
+        if (addedAt == null) addedAt = LocalDateTime.now();
+    }
 }
