@@ -1,6 +1,6 @@
 package com.altong.altong_backend.schedule.owner.dto.response;
 
-import com.altong.altong_backend.schedule.entity.Schedule;
+import com.altong.altong_backend.schedule.model.Schedule;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDate;
 import java.time.LocalTime;

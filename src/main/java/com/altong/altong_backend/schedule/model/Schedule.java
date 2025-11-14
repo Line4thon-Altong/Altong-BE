@@ -1,4 +1,4 @@
-package com.altong.altong_backend.schedule.entity;
+package com.altong.altong_backend.schedule.model;
 
 import com.altong.altong_backend.employee.model.Employee;
 import com.altong.altong_backend.store.model.Store;
