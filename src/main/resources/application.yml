@@ -32,6 +32,8 @@ jwt:
   refresh-exp: ${JWT_REFRESH_EXP}
 
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss, Asia/Seoul} %-5level %logger{36} - %msg%n"
   level:
     org.hibernate.SQL: debug
     org.springframework.data.redis: DEBUG
