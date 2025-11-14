@@ -10,7 +10,6 @@ import com.altong.altong_backend.manual.dto.response.ManualDetailResponse;
 import com.altong.altong_backend.manual.dto.response.ManualUpdateResponse;
 import com.altong.altong_backend.owner.model.Owner;
 import com.altong.altong_backend.owner.repository.OwnerRepository;
-import com.altong.altong_backend.quiz.dto.response.QuizResponse;
 import com.altong.altong_backend.quiz.service.QuizService;
 import com.altong.altong_backend.store.model.Store;
 import com.altong.altong_backend.store.repository.StoreRepository;

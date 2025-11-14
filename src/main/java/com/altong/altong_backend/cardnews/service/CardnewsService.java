@@ -37,7 +37,7 @@ public class CardnewsService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.TRAINING_NOT_FOUND));
 
         if (training.getManual() == null) {
-            log.error("❌ Training에 Manual이 없음: trainingId={}", trainingId);
+            log.error("Training에 Manual이 없음: trainingId={}", trainingId);
             throw new BusinessException(ErrorCode.MANUAL_NOT_FOUND);
         }
 
@@ -61,25 +61,25 @@ public class CardnewsService {
             CardnewsResponse response = aiResponse.getBody();
 
             // 디버깅 로그
-            log.info("🔍 FastAPI 전체 응답: {}", response);
+            log.info("FastAPI 전체 응답: {}", response);
 
             if (response == null) {
-                log.error("❌ FastAPI 응답이 null");
+                log.error("FastAPI 응답이 null");
                 throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
             }
 
             // imageUrl 직접 추출 및 검증
             String imageUrl = response.getImageUrl();
-            log.info("🔍 추출된 Image URL: '{}'", imageUrl);
-            log.info("🔍 Image URL 타입: {}", imageUrl != null ? imageUrl.getClass().getName() : "null");
+            log.info("추출된 Image URL: '{}'", imageUrl);
+            log.info("Image URL 타입: {}", imageUrl != null ? imageUrl.getClass().getName() : "null");
 
             if (imageUrl == null || imageUrl.isEmpty()) {
-                log.error("❌ image_url이 비어있음!");
+                log.error("image_url이 비어있음!");
                 throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
             }
 
             if (!imageUrl.startsWith("http")) {
-                log.error("❌ image_url이 URL 형식이 아님: {}", imageUrl);
+                log.error("image_url이 URL 형식이 아님: {}", imageUrl);
                 throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
             }
 
@@ -91,7 +91,7 @@ public class CardnewsService {
 
             cardnewsRepository.save(cardNews);
 
-            log.info("✅ 카드뉴스 DB 저장 완료: id={}, trainingId={}, imageUrl={}",
+            log.info("카드뉴스 DB 저장 완료: id={}, trainingId={}, imageUrl={}",
                     cardNews.getId(), trainingId, cardNews.getImageUrl());
 
             return response;
@@ -99,7 +99,7 @@ public class CardnewsService {
         } catch (BusinessException e) {
             throw e;
         } catch (Exception e) {
-            log.error("❌ 카드뉴스 생성 실패: trainingId={}, 원인: {}", trainingId, e.getMessage(), e);
+            log.error("카드뉴스 생성 실패: trainingId={}, 원인: {}", trainingId, e.getMessage(), e);
             throw new BusinessException(ErrorCode.EXTERNAL_API_ERROR);
         }
     }

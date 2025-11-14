@@ -46,7 +46,7 @@ public class QuizService {
 
     // 퀴즈 생성
     public QuizResponse generateQuiz(Long trainingId, String tone) {
-        log.info("🎯 [QuizService] FastAPI 퀴즈 생성 요청 시작 | trainingId={}, tone={}", trainingId, tone);
+        log.info("[QuizService] FastAPI 퀴즈 생성 요청 시작 | trainingId={}, tone={}", trainingId, tone);
 
         try {
             // 1. 요청 바디 구성
